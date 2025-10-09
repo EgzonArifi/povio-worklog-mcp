@@ -55,7 +55,10 @@ Add the MCP server to your Cursor settings:
 }
 ```
 
-**Important:** Replace the path with your actual absolute path to the server.
+**Configuration Details:**
+- **Path:** Replace with your actual absolute path to the server
+- **POVIO_API_TOKEN:** Your Povio dashboard cookie (required)
+- **DEFAULT_PROJECT_ID:** Your default project ID (optional - if set, you don't need to specify projectId when posting worklogs)
 
 ### Restart Cursor
 
@@ -79,6 +82,10 @@ AI: [Uses generate_worklog tool]
 You: "post worklog with 4 hours to project 15886"
 AI: [Uses post_worklog tool]
     Posts to Povio dashboard
+
+You: "post worklog with 3 hours"
+AI: [Uses post_worklog tool with DEFAULT_PROJECT_ID]
+    Posts to your default project
 ```
 
 ### Generate and Post
@@ -86,7 +93,11 @@ AI: [Uses post_worklog tool]
 ```
 You: "generate and post worklog for today, 4 hours"
 AI: [Uses generate_and_post_worklog tool]
-    Generates from commits AND posts to Povio
+    Generates from commits AND posts to Povio (uses DEFAULT_PROJECT_ID)
+
+You: "generate and post worklog for yesterday, 6 hours, project 12345"
+AI: [Uses generate_and_post_worklog tool]
+    Generates and posts to specific project
 ```
 
 ## Available Tools
@@ -117,7 +128,7 @@ Post a worklog entry to Povio dashboard.
 
 **Parameters:**
 - `description` (required): Worklog description
-- `projectId` (required): Povio project ID (e.g., 15886)
+- `projectId` (optional): Povio project ID (e.g., 15886). Uses DEFAULT_PROJECT_ID from environment if not provided
 - `hours` (required): Number of hours worked
 - `date` (required): Date in YYYY-MM-DD format
 
@@ -135,7 +146,7 @@ Combined tool that generates from commits and posts to Povio.
 
 **Parameters:**
 - `timeframe` (required): `"today"` or `"yesterday"`
-- `projectId` (required): Povio project ID
+- `projectId` (optional): Povio project ID. Uses DEFAULT_PROJECT_ID from environment if not provided
 - `hours` (required): Number of hours worked
 - `repository` (optional): Path to git repository
 

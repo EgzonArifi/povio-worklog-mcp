@@ -9,10 +9,13 @@ export async function generateAndPostWorklog(args: GenerateAndPostArgs) {
     repository: args.repository,
   });
   
+  // Use provided projectId or fall back to DEFAULT_PROJECT_ID from environment
+  const projectId = args.projectId ?? parseInt(process.env.DEFAULT_PROJECT_ID || '0');
+  
   // Step 2: Post to Povio
   const postResult = await postWorklog({
     description: worklog.description,
-    projectId: args.projectId,
+    projectId: projectId,
     hours: args.hours,
     date: worklog.date,
   });
@@ -22,7 +25,7 @@ export async function generateAndPostWorklog(args: GenerateAndPostArgs) {
     generated: worklog,
     posted: postResult,
     summary: postResult.success 
-      ? `✓ Worklog generated and posted successfully!\n\nDate: ${worklog.date}\nDescription: ${worklog.description}\nHours: ${args.hours}\nProject ID: ${args.projectId}\n\nCommits analyzed:\n${worklog.commits.join('\n')}`
+      ? `✓ Worklog generated and posted successfully!\n\nDate: ${worklog.date}\nDescription: ${worklog.description}\nHours: ${args.hours}\nProject ID: ${projectId}\n\nCommits analyzed:\n${worklog.commits.join('\n')}`
       : `✓ Worklog generated, but posting failed.\n\nGenerated worklog:\nDate: ${worklog.date}\nDescription: ${worklog.description}\n\nError: ${postResult.message}`,
   };
 }

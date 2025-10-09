@@ -54,7 +54,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'post_worklog',
-      description: 'Post a worklog entry to Povio dashboard. Requires description, project ID, hours, and date.',
+      description: 'Post a worklog entry to Povio dashboard. Requires description, hours, and date. Uses DEFAULT_PROJECT_ID from environment if projectId not provided.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -64,7 +64,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           projectId: {
             type: 'number',
-            description: 'Povio project ID (e.g., 15886 for FaceFlip/Aurascan)',
+            description: 'Povio project ID (optional, uses DEFAULT_PROJECT_ID from environment if not provided)',
           },
           hours: {
             type: 'number',
@@ -75,12 +75,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             description: 'Date in YYYY-MM-DD format',
           },
         },
-        required: ['description', 'projectId', 'hours', 'date'],
+        required: ['description', 'hours', 'date'],
       },
     },
     {
       name: 'generate_and_post_worklog',
-      description: 'Generate worklog from git commits AND post it to Povio in one step. Combines generate_worklog and post_worklog functionality.',
+      description: 'Generate worklog from git commits AND post it to Povio in one step. Uses DEFAULT_PROJECT_ID from environment if projectId not provided.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -91,7 +91,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           projectId: {
             type: 'number',
-            description: 'Povio project ID (e.g., 15886 for FaceFlip/Aurascan)',
+            description: 'Povio project ID (optional, uses DEFAULT_PROJECT_ID from environment if not provided)',
           },
           hours: {
             type: 'number',
@@ -102,7 +102,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             description: 'Path to git repository (optional, defaults to current directory)',
           },
         },
-        required: ['timeframe', 'projectId', 'hours'],
+        required: ['timeframe', 'hours'],
       },
     },
   ],

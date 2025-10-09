@@ -39,14 +39,14 @@ export interface GenerateWorklogArgs {
 
 export interface PostWorklogArgs {
   description: string;
-  projectId: number;
+  projectId?: number;
   hours: number;
   date: string;
 }
 
 export interface GenerateAndPostArgs {
   timeframe: 'today' | 'yesterday';
-  projectId: number;
+  projectId?: number;
   hours: number;
   repository?: string;
 }
