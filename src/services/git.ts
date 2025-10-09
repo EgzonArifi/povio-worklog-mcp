@@ -35,8 +35,12 @@ export class GitService {
    * Get commits since a specific date
    */
   async getCommitsSince(since: Date): Promise<ParsedCommit[]> {
+    // Get current user email to filter commits
+    const userEmail = await this.git.raw(['config', 'user.email']);
+    
     const log: LogResult = await this.git.log({
       '--since': since.toISOString(),
+      '--author': userEmail.trim(),
       '--all': null,
     });
 
@@ -47,9 +51,13 @@ export class GitService {
    * Get commits between two dates
    */
   async getCommitsBetween(from: Date, to: Date): Promise<ParsedCommit[]> {
+    // Get current user email to filter commits
+    const userEmail = await this.git.raw(['config', 'user.email']);
+    
     const log: LogResult = await this.git.log({
       '--since': from.toISOString(),
       '--until': to.toISOString(),
+      '--author': userEmail.trim(),
       '--all': null,
     });
 

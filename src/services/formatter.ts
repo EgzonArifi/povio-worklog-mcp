@@ -95,24 +95,33 @@ export class WorklogFormatter {
 
   /**
    * Extract the main action from a commit message
+   * Creates client-appropriate descriptions following Povio guidelines
    */
   private static extractAction(message: string): string {
     // Remove ticket numbers
     let clean = message.replace(/[A-Z]+-\d+/g, '').trim();
     
-    // Remove merge commit prefix
-    clean = clean.replace(/^Merge pull request #\d+ from [\w-/]+\s*/i, '');
+    // Remove merge commit prefix and extract meaningful description
+    const mergeMatch = clean.match(/^Merge pull request #\d+ from [\w-/]+\s*(.+)/i);
+    if (mergeMatch && mergeMatch[1]) {
+      clean = mergeMatch[1].trim();
+    } else {
+      clean = clean.replace(/^Merge pull request #\d+ from [\w-/]+\s*/i, '');
+    }
     
     // Remove branch names
     clean = clean.replace(/^Merge branch '[\w-/]+'/, '');
+    
+    // Remove conventional commit prefixes for client-facing description
+    clean = clean.replace(/^(feat|fix|docs|style|refactor|test|chore):\s*/i, '');
     
     // Capitalize first letter if needed
     if (clean.length > 0 && clean[0] !== clean[0].toUpperCase()) {
       clean = clean[0].toUpperCase() + clean.slice(1);
     }
     
-    // Ensure it ends with proper punctuation context
-    return clean || 'Code updates';
+    // Ensure meaningful description
+    return clean || 'Development work';
   }
 
   /**

@@ -12,6 +12,8 @@ A Model Context Protocol (MCP) server that provides worklog generation from git 
 
 ## Installation
 
+> **Note:** These steps are only needed once during initial setup, or after you make changes to the source code.
+
 ### 1. Install Dependencies
 
 ```bash
@@ -25,6 +27,12 @@ npm run build
 ```
 
 This creates the compiled JavaScript in the `dist/` directory.
+
+**When to rebuild:**
+- ✅ First time setup
+- ✅ After pulling updates from git
+- ✅ After making changes to `src/` files
+- ❌ Not needed for regular daily use
 
 ## Cursor Configuration
 
@@ -133,6 +141,21 @@ Combined tool that generates from commits and posts to Povio.
 
 **Returns:**
 Combined summary with generation and posting results.
+
+## Important: Client-Facing Descriptions
+
+**This tool generates descriptions that appear on client invoices.** The formatter:
+
+- ✅ Filters commits to **only YOUR commits** (based on git user.email)
+- ✅ Creates professional, client-appropriate descriptions
+- ✅ Removes technical jargon (branch names, PR numbers, etc.)
+- ✅ Extracts and includes ticket numbers
+- ✅ Combines multiple commits into dense, descriptive format
+
+**Povio Guidelines:**
+> Logs are shown on invoices for clients exactly as they are, so make sure they are appropriate and descriptive. Write down what you accomplished for the client in a dense format and add ticket numbers or descriptions if possible.
+
+The tool automatically formats your commits to follow these guidelines, but always review the generated description before posting.
 
 ## Getting Your Povio API Token
 
