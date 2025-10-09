@@ -17,6 +17,8 @@ export interface WorklogData {
   ticketNumbers: string[];
   projectId?: number;
   hours?: number;
+  rawCommits?: ParsedCommit[];
+  aiEnhancementPrompt?: string;
 }
 
 export interface PovioWorklogRequest {
@@ -35,6 +37,7 @@ export interface PovioWorklogResponse {
 export interface GenerateWorklogArgs {
   timeframe: 'today' | 'yesterday';
   repository?: string;
+  enhanceWithAI?: boolean;
 }
 
 export interface PostWorklogArgs {
@@ -49,6 +52,7 @@ export interface GenerateAndPostArgs {
   projectId?: number;
   hours: number;
   repository?: string;
+  enhanceWithAI?: boolean;
 }
 
 

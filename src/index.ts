@@ -35,7 +35,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: 'generate_worklog',
-      description: 'Generate a worklog from git commits for today or yesterday. Analyzes commit messages, extracts ticket numbers, and creates a professional worklog description.',
+      description: 'Generate a worklog from git commits for today or yesterday. Analyzes commit messages, extracts ticket numbers, and creates AI-enhanced, professional worklog descriptions following Povio guidelines. AI enhancement is ENABLED BY DEFAULT.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -47,6 +47,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           repository: {
             type: 'string',
             description: 'Path to git repository (optional, defaults to current directory)',
+          },
+          enhanceWithAI: {
+            type: 'boolean',
+            description: 'AI enhancement is enabled by default. Set to false to disable and get basic auto-generated description instead',
           },
         },
         required: ['timeframe'],
@@ -80,7 +84,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'generate_and_post_worklog',
-      description: 'Generate worklog from git commits AND post it to Povio in one step. Uses DEFAULT_PROJECT_ID from environment if projectId not provided.',
+      description: 'Generate worklog from git commits AND post it to Povio in one step. Uses DEFAULT_PROJECT_ID from environment if projectId not provided. AI enhancement is ENABLED BY DEFAULT - generation will pause for AI to create an enhanced description before posting.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -101,6 +105,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             type: 'string',
             description: 'Path to git repository (optional, defaults to current directory)',
           },
+          enhanceWithAI: {
+            type: 'boolean',
+            description: 'AI enhancement is enabled by default. Set to false to disable and auto-post without AI enhancement (not recommended)',
+          },
         },
         required: ['timeframe', 'hours'],
       },
@@ -116,6 +124,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
       case 'generate_worklog': {
         const result = await generateWorklog(args as any);
+        
+        // If AI enhancement is requested, format response to guide AI
+        if (result.aiEnhancementPrompt) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `${result.aiEnhancementPrompt}
+
+---
+AUTO-GENERATED DESCRIPTION (for reference):
+${result.description}
+
+---
+FULL WORKLOG DATA:
+${JSON.stringify({
+  date: result.date,
+  commits: result.commits,
+  ticketNumbers: result.ticketNumbers,
+}, null, 2)}`,
+              },
+            ],
+          };
+        }
+        
+        // Standard response
         return {
           content: [
             {
@@ -139,7 +173,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'generate_and_post_worklog': {
-        const result = await generateAndPostWorklog(args as any);
+        const typedArgs = args as any;
+        const result = await generateAndPostWorklog(typedArgs);
+        
+        // If AI enhancement was requested, the worklog won't be posted yet
+        // Return guidance for AI to generate enhanced description first
+        if (result.generated.aiEnhancementPrompt) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `${result.generated.aiEnhancementPrompt}
+
+---
+NOTE: After generating the enhanced description, use the 'post_worklog' tool to submit it:
+- Date: ${result.generated.date}
+- Hours: ${typedArgs.hours}
+- Project ID: ${typedArgs.projectId ?? process.env.DEFAULT_PROJECT_ID}
+
+AUTO-GENERATED DESCRIPTION (for reference):
+${result.generated.description}`,
+              },
+            ],
+          };
+        }
+        
+        // Standard response
         return {
           content: [
             {

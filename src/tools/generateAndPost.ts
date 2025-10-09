@@ -7,10 +7,23 @@ export async function generateAndPostWorklog(args: GenerateAndPostArgs) {
   const worklog = await generateWorklog({
     timeframe: args.timeframe,
     repository: args.repository,
+    enhanceWithAI: args.enhanceWithAI,
   });
   
   // Use provided projectId or fall back to DEFAULT_PROJECT_ID from environment
   const projectId = args.projectId ?? parseInt(process.env.DEFAULT_PROJECT_ID || '0');
+  
+  // AI enhancement is enabled by default (can be disabled with enhanceWithAI: false)
+  // If AI enhancement is active, don't post yet - return worklog for AI to enhance
+  const shouldEnhance = args.enhanceWithAI !== false;
+  
+  if (shouldEnhance) {
+    return {
+      generated: worklog,
+      posted: { success: false, message: 'Waiting for AI-enhanced description' },
+      summary: `Worklog generated. Waiting for AI to create enhanced description before posting.`,
+    };
+  }
   
   // Step 2: Post to Povio
   const postResult = await postWorklog({

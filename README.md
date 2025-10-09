@@ -5,6 +5,7 @@ A Model Context Protocol (MCP) server that provides worklog generation from git 
 ## Features
 
 - 🔍 **Generate Worklog**: Automatically analyze git commits and generate professional worklog descriptions
+- 🤖 **AI Enhancement (Default)**: AI automatically generates optimized, guideline-compliant descriptions from your commits
 - 📤 **Post to Povio**: Post worklogs directly to Povio dashboard
 - ⚡ **Combined Action**: Generate and post in one step
 - 🎫 **Smart Parsing**: Automatically extracts ticket numbers (e.g., ENG-155, WAY-204)
@@ -68,12 +69,21 @@ After adding the configuration, restart Cursor to load the MCP server.
 
 Once configured, you can use natural language to interact with the worklog tools:
 
-### Generate Worklog
+### Generate Worklog (AI-Enhanced by Default)
 
 ```
 You: "generate worklog for today"
-AI: [Uses generate_worklog tool]
-    Returns: Date, description, commits analyzed, ticket numbers
+AI: [Uses generate_worklog tool with AI enhancement]
+    Analyzes commits and generates optimized description following Povio guidelines
+    Returns: Enhanced, client-appropriate worklog description
+```
+
+### Generate without AI Enhancement (Not Recommended)
+
+```
+You: "generate worklog for today without AI"
+AI: [Uses generate_worklog tool with enhanceWithAI=false]
+    Returns: Basic auto-generated description
 ```
 
 ### Post Worklog
@@ -109,12 +119,22 @@ Generate a worklog from git commits.
 **Parameters:**
 - `timeframe` (required): `"today"` or `"yesterday"`
 - `repository` (optional): Path to git repository (defaults to current directory)
+- `enhanceWithAI` (optional): Defaults to `true`. Set to `false` to disable AI enhancement (not recommended)
 
-**Returns:**
+**Returns (AI enhancement mode - default):**
+The tool returns:
+- Detailed commit information with context
+- Povio guidelines for the AI to follow
+- A prompt requesting the AI to generate an optimized description
+- Auto-generated description as a reference
+
+The AI will then analyze the commits and create a superior, client-appropriate worklog description.
+
+**Returns (basic mode - when disabled):**
 ```json
 {
   "date": "2025-10-09",
-  "description": "Code updates. [ENG-155] Implemented screenshot upload feature",
+  "description": "[ENG-155] Implement Screenshot Upload Feature",
   "commits": [
     "8e644dc - ENG-155 Implement Screenshot Upload Feature"
   ],
@@ -149,9 +169,61 @@ Combined tool that generates from commits and posts to Povio.
 - `projectId` (optional): Povio project ID. Uses DEFAULT_PROJECT_ID from environment if not provided
 - `hours` (required): Number of hours worked
 - `repository` (optional): Path to git repository
+- `enhanceWithAI` (optional): Defaults to `true`. Set to `false` to disable AI enhancement and auto-post (not recommended)
 
 **Returns:**
 Combined summary with generation and posting results.
+
+**Note:** By default (AI enhancement enabled), the tool will:
+1. Generate the worklog with AI enhancement prompt
+2. Wait for AI to create optimized description
+3. NOT post automatically (you'll need to use `post_worklog` with the AI-generated description)
+
+## AI-Enhanced Worklog Generation (Default!)
+
+All worklog generation now uses **AI enhancement by default**. This feature:
+
+### How It Works
+
+1. **Analyze Commits**: The tool extracts your git commits with full context
+2. **Apply Guidelines**: Provides the AI with Povio's specific guidelines
+3. **Generate Description**: The AI creates an optimized, client-appropriate description
+4. **Review & Post**: You review the AI-generated description and post it
+
+### Benefits
+
+- 🎯 **Better Context**: AI understands the bigger picture from multiple commits
+- 📝 **Improved Language**: Generates more professional, client-facing descriptions
+- ✅ **Guideline Compliance**: Automatically follows Povio's invoicing guidelines
+- ⚡ **Time Saving**: No need to manually craft descriptions
+
+### Example
+
+**Your commits:**
+```
+8e644dc - ENG-155 Implement Screenshot Upload Feature
+a2b3c4d - ENG-155 Add error handling for uploads
+d5e6f7g - ENG-155 Update UI for better UX
+```
+
+**Standard description:**
+```
+[ENG-155] Implement Screenshot Upload Feature
+```
+
+**AI-enhanced description:**
+```
+[ENG-155] Implemented screenshot upload functionality in developer settings with comprehensive error handling and improved user interface for enhanced user experience
+```
+
+### Usage
+
+AI enhancement is **automatic** - just use the normal commands:
+```
+You: "generate worklog for today"
+```
+
+To disable AI enhancement (not recommended), you can explicitly set `enhanceWithAI: false` when calling the tool directly, or say "without AI".
 
 ## Important: Client-Facing Descriptions
 
@@ -166,7 +238,7 @@ Combined summary with generation and posting results.
 **Povio Guidelines:**
 > Logs are shown on invoices for clients exactly as they are, so make sure they are appropriate and descriptive. Write down what you accomplished for the client in a dense format and add ticket numbers or descriptions if possible.
 
-The tool automatically formats your commits to follow these guidelines, but always review the generated description before posting.
+The tool automatically formats your commits to follow these guidelines. With **AI enhancement mode**, you get even better descriptions that maximize clarity and professionalism.
 
 ## Getting Your Povio API Token
 
