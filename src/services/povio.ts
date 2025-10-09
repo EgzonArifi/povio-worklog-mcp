@@ -21,7 +21,7 @@ export class PovioService {
       const startDate = this.getWeekStart(new Date(request.date));
       const endDate = this.getWeekEnd(new Date(request.date));
       
-      // Build query string matching the shell script
+      // Build query string with required filters
       const queryString = new URLSearchParams({
         'filters[daterange_start]': startDate,
         'filters[daterange_end]': endDate,
@@ -29,7 +29,7 @@ export class PovioService {
         'filters[group]': 'day'
       }).toString();
 
-      // Build JSON payload matching the shell script exactly
+      // Build API payload
       const payload = {
         description: request.description,
         project_id: request.projectId,
