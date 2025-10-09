@@ -1,4 +1,4 @@
-# Worklog MCP Server
+# Povio Worklog MCP Server
 
 A Model Context Protocol (MCP) server that provides worklog generation from git commits and integration with Povio dashboard.
 
@@ -15,7 +15,6 @@ A Model Context Protocol (MCP) server that provides worklog generation from git 
 ### 1. Install Dependencies
 
 ```bash
-cd mcp-server
 npm install
 ```
 
@@ -27,33 +26,18 @@ npm run build
 
 This creates the compiled JavaScript in the `dist/` directory.
 
-### 3. Configure Environment
-
-Set your Povio API token as an environment variable:
-
-```bash
-export POVIO_API_TOKEN="your-povio-cookie-token"
-```
-
-Or add it to your shell profile (`~/.zshrc` or `~/.bashrc`):
-
-```bash
-echo 'export POVIO_API_TOKEN="your-token"' >> ~/.zshrc
-source ~/.zshrc
-```
-
 ## Cursor Configuration
 
 Add the MCP server to your Cursor settings:
 
-**File:** `~/.cursor/mcp_settings.json` (or via Cursor Settings UI)
+**File:** `~/.cursor/mcp.json`
 
 ```json
 {
   "mcpServers": {
     "worklog": {
       "command": "node",
-      "args": ["/Users/egzonarifi/Documents/GitHub/Aurascan/mcp-server/dist/index.js"],
+      "args": ["/absolute/path/to/povio-worklog-mcp/dist/index.js"],
       "env": {
         "POVIO_API_TOKEN": "your-povio-cookie-token",
         "DEFAULT_PROJECT_ID": "15886"
@@ -92,7 +76,7 @@ AI: [Uses post_worklog tool]
 ### Generate and Post
 
 ```
-You: "generate and post worklog for today, log 4 hours"
+You: "generate and post worklog for today, 4 hours"
 AI: [Uses generate_and_post_worklog tool]
     Generates from commits AND posts to Povio
 ```
@@ -111,7 +95,7 @@ Generate a worklog from git commits.
 ```json
 {
   "date": "2025-10-09",
-  "description": "[ENG-155] Implemented screenshot upload feature",
+  "description": "Code updates. [ENG-155] Implemented screenshot upload feature",
   "commits": [
     "8e644dc - ENG-155 Implement Screenshot Upload Feature"
   ],
@@ -150,6 +134,15 @@ Combined tool that generates from commits and posts to Povio.
 **Returns:**
 Combined summary with generation and posting results.
 
+## Getting Your Povio API Token
+
+1. Log in to Povio Dashboard
+2. Open browser DevTools (F12)
+3. Go to Application → Cookies
+4. Find the `_poviolabs_dashboard` cookie
+5. Copy its value (the entire string)
+6. Add it to your Cursor MCP configuration
+
 ## Project IDs
 
 Common Povio project IDs:
@@ -183,36 +176,18 @@ node dist/index.js
 
 Then send JSON-RPC messages via stdin.
 
-## Comparison with Shell Scripts
-
-### Current Shell Script Approach
-- ✅ Works without Node.js setup
-- ✅ Direct shell execution
-- ❌ Raw text output (requires parsing)
-- ❌ No structured data
-- ❌ Separate process each time
-
-### MCP Server Approach
-- ✅ Structured JSON responses
-- ✅ Type-safe with TypeScript
-- ✅ Persistent process (faster)
-- ✅ Better error handling
-- ✅ Works across all repos
-- ❌ Requires Node.js and build step
-- ❌ More complex setup
-
 ## Troubleshooting
 
 ### Server Not Starting
 
-1. Check that Cursor can find the server:
+1. Check that the server was built:
    ```bash
-   ls -la /Users/egzonarifi/Documents/GitHub/Aurascan/mcp-server/dist/index.js
+   ls -la dist/index.js
    ```
 
 2. Test the server manually:
    ```bash
-   node /Users/egzonarifi/Documents/GitHub/Aurascan/mcp-server/dist/index.js
+   node dist/index.js
    ```
    (It should run without errors and wait for input)
 
@@ -222,14 +197,9 @@ Then send JSON-RPC messages via stdin.
 
 If posting to Povio fails:
 
-1. Verify your token is set:
-   ```bash
-   echo $POVIO_API_TOKEN
-   ```
-
-2. Check token validity by running your existing shell script
-
-3. Make sure the token is in the Cursor configuration
+1. Verify your token is set in the Cursor MCP configuration
+2. Check token validity (it may have expired)
+3. Get a fresh token from the Povio dashboard
 
 ### No Commits Found
 
@@ -247,10 +217,16 @@ If worklog generation returns no commits:
 
 3. The server uses `--all` flag to check all branches
 
+## Architecture
+
+This MCP server is built with TypeScript and follows the Model Context Protocol specification. It provides structured tools that AI assistants like Claude can use to help with worklog management.
+
+**Key Components:**
+- `src/services/git.ts` - Git commit analysis
+- `src/services/povio.ts` - Povio API integration
+- `src/services/formatter.ts` - Worklog formatting
+- `src/tools/` - MCP tool definitions
+
 ## License
 
 MIT
-
-
-
-
