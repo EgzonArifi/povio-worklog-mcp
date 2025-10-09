@@ -66,16 +66,32 @@ export class GitService {
 
   /**
    * Parse git log into structured commits
+   * Filters out stash commits and other non-relevant commits
    */
   private parseCommits(log: LogResult): ParsedCommit[] {
-    return log.all.map(commit => ({
-      hash: commit.hash.substring(0, 7),
-      message: commit.message,
-      date: commit.date,
-      author: commit.author_name,
-      ticketNumber: this.extractTicketNumber(commit.message),
-      type: this.determineCommitType(commit.message),
-    }));
+    return log.all
+      .filter(commit => !this.isStashCommit(commit.message))
+      .map(commit => ({
+        hash: commit.hash.substring(0, 7),
+        message: commit.message,
+        date: commit.date,
+        author: commit.author_name,
+        ticketNumber: this.extractTicketNumber(commit.message),
+        type: this.determineCommitType(commit.message),
+      }));
+  }
+
+  /**
+   * Check if a commit is a git stash entry
+   */
+  private isStashCommit(message: string): boolean {
+    const stashPatterns = [
+      /^WIP on /i,
+      /^index on /i,
+      /^On \w+:/i,
+    ];
+    
+    return stashPatterns.some(pattern => pattern.test(message));
   }
 
   /**
