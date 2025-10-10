@@ -4,6 +4,8 @@ A Model Context Protocol (MCP) server that provides worklog generation from git 
 
 ## Features
 
+- 📋 **List Projects**: Easily view all your active Povio projects with roles
+- 🏷️ **Project by Name**: Use project names instead of IDs (e.g., "FaceFlip" instead of "15886")
 - 🔍 **Generate Worklog**: Automatically analyze git commits and generate professional worklog descriptions
 - 🤖 **AI Enhancement (Default)**: AI automatically generates optimized, guideline-compliant descriptions from your commits
 - 📤 **Post to Povio**: Post worklogs directly to Povio dashboard
@@ -86,12 +88,24 @@ AI: [Uses generate_worklog tool with enhanceWithAI=false]
     Returns: Basic auto-generated description
 ```
 
+### List Projects
+
+```
+You: "list my projects"
+AI: [Uses list_projects tool]
+    Shows all your active projects with roles
+```
+
 ### Post Worklog
 
 ```
+You: "post worklog with 4 hours to FaceFlip"
+AI: [Uses post_worklog tool with projectName]
+    Automatically resolves project name and posts
+
 You: "post worklog with 4 hours to project 15886"
-AI: [Uses post_worklog tool]
-    Posts to Povio dashboard
+AI: [Uses post_worklog tool with projectId]
+    Posts to Povio dashboard using project ID
 
 You: "post worklog with 3 hours"
 AI: [Uses post_worklog tool with DEFAULT_PROJECT_ID]
@@ -112,7 +126,32 @@ AI: [Uses generate_and_post_worklog tool]
 
 ## Available Tools
 
-### 1. `generate_worklog`
+### 1. `list_projects`
+
+List all your active projects in Povio.
+
+**Parameters:** None
+
+**Returns:**
+```
+Found 6 active project(s):
+
+• Autobiography (Ios Engineer)
+• FaceFlip (Ios Engineer)
+• Povio Estimations (Ios Engineer)
+• Team Leads (Lead Engineer)
+• iOS Internal (Ios Engineer)
+• Bunny CDN Mobile (Ios Engineer)
+```
+
+**Usage:**
+```
+You: "list my projects"
+AI: [Uses list_projects tool]
+    Shows all your active projects with roles
+```
+
+### 2. `generate_worklog`
 
 Generate a worklog from git commits.
 
@@ -142,13 +181,14 @@ The AI will then analyze the commits and create a superior, client-appropriate w
 }
 ```
 
-### 2. `post_worklog`
+### 3. `post_worklog`
 
 Post a worklog entry to Povio dashboard.
 
 **Parameters:**
 - `description` (required): Worklog description
 - `projectId` (optional): Povio project ID (e.g., 15886). Uses DEFAULT_PROJECT_ID from environment if not provided
+- `projectName` (optional): Project name (alternative to projectId, e.g., "FaceFlip")
 - `hours` (required): Number of hours worked
 - `date` (required): Date in YYYY-MM-DD format
 
@@ -160,13 +200,24 @@ Hours: 4
 Project ID: 15886
 ```
 
-### 3. `generate_and_post_worklog`
+**Usage:**
+```
+You: "post worklog with 4 hours to FaceFlip"
+AI: [Uses post_worklog tool with projectName="FaceFlip"]
+    Automatically resolves "FaceFlip" to project ID and posts
+
+You: "post worklog with 4 hours"
+AI: [Uses DEFAULT_PROJECT_ID from environment]
+```
+
+### 4. `generate_and_post_worklog`
 
 Combined tool that generates from commits and posts to Povio.
 
 **Parameters:**
 - `timeframe` (required): `"today"` or `"yesterday"`
 - `projectId` (optional): Povio project ID. Uses DEFAULT_PROJECT_ID from environment if not provided
+- `projectName` (optional): Project name (alternative to projectId, e.g., "FaceFlip")
 - `hours` (required): Number of hours worked
 - `repository` (optional): Path to git repository
 - `enhanceWithAI` (optional): Defaults to `true`. Set to `false` to disable AI enhancement and auto-post (not recommended)
