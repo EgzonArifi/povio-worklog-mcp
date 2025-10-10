@@ -168,7 +168,7 @@ export class PovioService {
       return this.extractProjectId(partialMatch.path);
     }
 
-    throw new Error(`Project "${projectName}" not found. Use list_projects tool to see available projects.`);
+    throw new Error(`Project "${projectName}" not found. Use list_povio_projects tool to see available projects.`);
   }
 
   /**

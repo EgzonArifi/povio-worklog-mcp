@@ -35,7 +35,7 @@ const server = new Server(
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
-      name: 'list_projects',
+      name: 'list_povio_projects',
       description: 'List all active projects assigned to you in Povio. Shows project names and roles for easy reference when posting worklogs.',
       inputSchema: {
         type: 'object',
@@ -140,7 +140,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
-      case 'list_projects': {
+      case 'list_povio_projects': {
         const result = await listProjects();
         return {
           content: [

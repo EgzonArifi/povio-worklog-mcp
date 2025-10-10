@@ -88,11 +88,11 @@ AI: [Uses generate_worklog tool with enhanceWithAI=false]
     Returns: Basic auto-generated description
 ```
 
-### List Projects
+### List Povio Projects
 
 ```
-You: "list my projects"
-AI: [Uses list_projects tool]
+You: "list my povio projects"
+AI: [Uses list_povio_projects tool]
     Shows all your active projects with roles
 ```
 
@@ -126,7 +126,7 @@ AI: [Uses generate_and_post_worklog tool]
 
 ## Available Tools
 
-### 1. `list_projects`
+### 1. `list_povio_projects`
 
 List all your active projects in Povio.
 
@@ -146,8 +146,8 @@ Found 6 active project(s):
 
 **Usage:**
 ```
-You: "list my projects"
-AI: [Uses list_projects tool]
+You: "list my povio projects"
+AI: [Uses list_povio_projects tool]
     Shows all your active projects with roles
 ```
 
