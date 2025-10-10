@@ -4,8 +4,8 @@ A Model Context Protocol (MCP) server that provides worklog generation from git 
 
 ## Features
 
-- 📋 **List Projects**: Easily view all your active Povio projects with roles
-- 🏷️ **Project by Name**: Use project names instead of IDs (e.g., "FaceFlip" instead of "15886")
+- 📋 **List Projects**: Easily view all your active Povio projects
+- 🏷️ **Use Project Names**: Simply use project names like "FaceFlip" or "Autobiography"
 - 🔍 **Generate Worklog**: Automatically analyze git commits and generate professional worklog descriptions
 - 🤖 **AI Enhancement (Default)**: AI automatically generates optimized, guideline-compliant descriptions from your commits
 - 📤 **Post to Povio**: Post worklogs directly to Povio dashboard
@@ -50,8 +50,7 @@ Add the MCP server to your Cursor settings:
       "command": "node",
       "args": ["/absolute/path/to/povio-worklog-mcp/dist/index.js"],
       "env": {
-        "POVIO_API_TOKEN": "your-povio-cookie-token",
-        "DEFAULT_PROJECT_ID": "15886"
+        "POVIO_API_TOKEN": "your-povio-cookie-token"
       }
     }
   }
@@ -61,7 +60,6 @@ Add the MCP server to your Cursor settings:
 **Configuration Details:**
 - **Path:** Replace with your actual absolute path to the server
 - **POVIO_API_TOKEN:** Your Povio dashboard cookie (required)
-- **DEFAULT_PROJECT_ID:** Your default project ID (optional - if set, you don't need to specify projectId when posting worklogs)
 
 ### Restart Cursor
 
@@ -133,16 +131,12 @@ AI: [Uses list_povio_projects tool]
 
 ```
 You: "post worklog with 4 hours to FaceFlip"
-AI: [Uses post_worklog tool with projectName]
-    Automatically resolves project name and posts
+AI: [Uses post_worklog tool]
+    Automatically resolves project by name and posts
 
-You: "post worklog with 4 hours to project 15886"
-AI: [Uses post_worklog tool with projectId]
-    Posts to Povio dashboard using project ID
-
-You: "post worklog with 3 hours"
-AI: [Uses post_worklog tool with DEFAULT_PROJECT_ID]
-    Posts to your default project
+You: "post worklog with 6 hours to Autobiography"
+AI: [Uses post_worklog tool]
+    Posts to Autobiography
 ```
 
 ### Generate and Post
@@ -220,8 +214,7 @@ Post a worklog entry to Povio dashboard.
 
 **Parameters:**
 - `description` (required): Worklog description
-- `projectId` (optional): Povio project ID (e.g., 15886). Uses DEFAULT_PROJECT_ID from environment if not provided
-- `projectName` (optional): Project name (alternative to projectId, e.g., "FaceFlip")
+- `projectName` (required): Project name (e.g., "FaceFlip", "Autobiography")
 - `hours` (required): Number of hours worked
 - `date` (required): Date in YYYY-MM-DD format
 
@@ -236,11 +229,12 @@ Project ID: 15886
 **Usage:**
 ```
 You: "post worklog with 4 hours to FaceFlip"
-AI: [Uses post_worklog tool with projectName="FaceFlip"]
-    Automatically resolves "FaceFlip" to project ID and posts
+AI: [Uses post_worklog tool]
+    Automatically resolves "FaceFlip" and posts
 
-You: "post worklog with 4 hours"
-AI: [Uses DEFAULT_PROJECT_ID from environment]
+You: "post 6 hours to Autobiography"
+AI: [Uses post_worklog tool]
+    Posts to Autobiography
 ```
 
 ### 4. `generate_and_post_worklog`
@@ -249,8 +243,7 @@ Combined tool that generates from commits and posts to Povio.
 
 **Parameters:**
 - `timeframe` (required): `"today"` or `"yesterday"`
-- `projectId` (optional): Povio project ID. Uses DEFAULT_PROJECT_ID from environment if not provided
-- `projectName` (optional): Project name (alternative to projectId, e.g., "FaceFlip")
+- `projectName` (required): Project name (e.g., "FaceFlip", "Autobiography")
 - `hours` (required): Number of hours worked
 - `repository` (optional): Path to git repository
 - `enhanceWithAI` (optional): Defaults to `true`. Set to `false` to disable AI enhancement and auto-post (not recommended)
@@ -261,7 +254,7 @@ Combined summary with generation and posting results.
 **Note:** By default (AI enhancement enabled), the tool will:
 1. Generate the worklog with AI enhancement prompt
 2. Wait for AI to create optimized description
-3. NOT post automatically (you'll need to use `post_worklog` with the AI-generated description)
+3. NOT post automatically (you'll then use `post_worklog` with the AI-generated description)
 
 ## AI-Enhanced Worklog Generation (Default!)
 
@@ -333,11 +326,15 @@ The tool automatically formats your commits to follow these guidelines. With **A
 5. Copy its value (the entire string)
 6. Add it to your Cursor MCP configuration
 
-## Project IDs
+## Your Projects
 
-Common Povio project IDs:
-- **15886** - FaceFlip/Aurascan
-- Add more as needed...
+Use `list_povio_projects` to see all your active projects with their IDs.
+
+Common examples:
+- **FaceFlip** (ID: 15886)
+- **Autobiography** (ID: 14093)
+- **Team Leads** (ID: 13396)
+- **iOS Internal** (ID: 13247)
 
 ## Development
 
