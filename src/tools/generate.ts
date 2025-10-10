@@ -60,7 +60,18 @@ Generate a single, comprehensive worklog description (1-2 sentences) that:
 3. Focuses on what was delivered, not how it was done
 4. Is concise but informative
 
-Return ONLY the enhanced worklog description, nothing else.
+IMPORTANT FORMATTING:
+Present the enhanced description in TWO formats for best user experience:
+
+1. ENHANCED DESCRIPTION (readable):
+[TICKET-123] Your enhanced description here
+
+2. COPYABLE VERSION:
+\`\`\`
+[TICKET-123] Your enhanced description here
+\`\`\`
+
+Then provide brief context explaining why this follows Povio guidelines.
 `.trim();
 }
 
