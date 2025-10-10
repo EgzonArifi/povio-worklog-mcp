@@ -44,7 +44,7 @@ Add the MCP server to your Cursor settings:
 ```json
 {
   "mcpServers": {
-    "worklog": {
+    "povio-worklog": {
       "command": "node",
       "args": ["/absolute/path/to/povio-worklog-mcp/dist/index.js"],
       "env": {
