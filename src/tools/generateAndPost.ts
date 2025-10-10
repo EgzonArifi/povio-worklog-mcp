@@ -10,8 +10,9 @@ export async function generateAndPostWorklog(args: GenerateAndPostArgs) {
     enhanceWithAI: args.enhanceWithAI,
   });
   
-  // Use provided projectId or fall back to DEFAULT_PROJECT_ID from environment
+  // Determine project ID or name
   const projectId = args.projectId ?? parseInt(process.env.DEFAULT_PROJECT_ID || '0');
+  const projectName = args.projectName;
   
   // AI enhancement is enabled by default (can be disabled with enhanceWithAI: false)
   // If AI enhancement is active, don't post yet - return worklog for AI to enhance
@@ -29,6 +30,7 @@ export async function generateAndPostWorklog(args: GenerateAndPostArgs) {
   const postResult = await postWorklog({
     description: worklog.description,
     projectId: projectId,
+    projectName: projectName,
     hours: args.hours,
     date: worklog.date,
   });
@@ -38,7 +40,7 @@ export async function generateAndPostWorklog(args: GenerateAndPostArgs) {
     generated: worklog,
     posted: postResult,
     summary: postResult.success 
-      ? `✓ Worklog generated and posted successfully!\n\nDate: ${worklog.date}\nDescription: ${worklog.description}\nHours: ${args.hours}\nProject ID: ${projectId}\n\nCommits analyzed:\n${worklog.commits.join('\n')}`
+      ? `✓ Worklog generated and posted successfully!\n\nDate: ${worklog.date}\nDescription: ${worklog.description}\nHours: ${args.hours}\nProject: ${projectName || projectId}\n\nCommits analyzed:\n${worklog.commits.join('\n')}`
       : `✓ Worklog generated, but posting failed.\n\nGenerated worklog:\nDate: ${worklog.date}\nDescription: ${worklog.description}\n\nError: ${postResult.message}`,
   };
 }

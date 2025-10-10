@@ -43,6 +43,7 @@ export interface GenerateWorklogArgs {
 export interface PostWorklogArgs {
   description: string;
   projectId?: number;
+  projectName?: string;
   hours: number;
   date: string;
 }
@@ -50,9 +51,30 @@ export interface PostWorklogArgs {
 export interface GenerateAndPostArgs {
   timeframe: 'today' | 'yesterday';
   projectId?: number;
+  projectName?: string;
   hours: number;
   repository?: string;
   enhanceWithAI?: boolean;
+}
+
+export interface PovioProject {
+  id: string;
+  name: string;
+  path: string;
+  roles: string[];
+}
+
+export interface PovioProjectGroup {
+  id: number | string;
+  name: string;
+  children: PovioProject[];
+}
+
+export interface PovioProjectsResponse {
+  records: PovioProjectGroup[];
+  current_page: number;
+  total_pages: number;
+  total_count: number;
 }
 
 

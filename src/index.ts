@@ -10,6 +10,7 @@ import {
 import { generateWorklog } from './tools/generate.js';
 import { postWorklog } from './tools/post.js';
 import { generateAndPostWorklog } from './tools/generateAndPost.js';
+import { listProjects } from './tools/listProjects.js';
 
 /**
  * Worklog MCP Server
@@ -33,6 +34,15 @@ const server = new Server(
 // Register available tools
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
+    {
+      name: 'list_projects',
+      description: 'List all active projects assigned to you in Povio. Shows project names and roles for easy reference when posting worklogs.',
+      inputSchema: {
+        type: 'object',
+        properties: {},
+        required: [],
+      },
+    },
     {
       name: 'generate_worklog',
       description: 'Generate a worklog from git commits for today or yesterday. Analyzes commit messages, extracts ticket numbers, and creates AI-enhanced, professional worklog descriptions following Povio guidelines. AI enhancement is ENABLED BY DEFAULT.',
@@ -58,7 +68,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'post_worklog',
-      description: 'Post a worklog entry to Povio dashboard. Requires description, hours, and date. Uses DEFAULT_PROJECT_ID from environment if projectId not provided.',
+      description: 'Post a worklog entry to Povio dashboard. Supports both project ID and project name. Uses DEFAULT_PROJECT_ID from environment if neither is provided.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -69,6 +79,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           projectId: {
             type: 'number',
             description: 'Povio project ID (optional, uses DEFAULT_PROJECT_ID from environment if not provided)',
+          },
+          projectName: {
+            type: 'string',
+            description: 'Project name (alternative to projectId, will be resolved automatically)',
           },
           hours: {
             type: 'number',
@@ -84,7 +98,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'generate_and_post_worklog',
-      description: 'Generate worklog from git commits AND post it to Povio in one step. Uses DEFAULT_PROJECT_ID from environment if projectId not provided. AI enhancement is ENABLED BY DEFAULT - generation will pause for AI to create an enhanced description before posting.',
+      description: 'Generate worklog from git commits AND post it to Povio in one step. Supports both project ID and project name. AI enhancement is ENABLED BY DEFAULT - generation will pause for AI to create an enhanced description before posting.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -96,6 +110,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           projectId: {
             type: 'number',
             description: 'Povio project ID (optional, uses DEFAULT_PROJECT_ID from environment if not provided)',
+          },
+          projectName: {
+            type: 'string',
+            description: 'Project name (alternative to projectId, will be resolved automatically)',
           },
           hours: {
             type: 'number',
@@ -122,6 +140,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
+      case 'list_projects': {
+        const result = await listProjects();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `${result.message}\n\n${result.summary}`,
+            },
+          ],
+        };
+      }
+
       case 'generate_worklog': {
         const result = await generateWorklog(args as any);
         
