@@ -53,9 +53,11 @@ export class PovioService {
         throw new Error(`Povio API error: ${response.status} ${response.statusText}\nResponse: ${responseText}`);
       }
 
+      const projectInfo = `Project ID: ${request.projectId}`;
+      
       return {
         success: true,
-        message: `✓ Worklog posted successfully!\nDate: ${request.date}\nHours: ${request.hours}\nProject ID: ${request.projectId}`,
+        message: `✓ Worklog posted successfully!\nDate: ${request.date}\nHours: ${request.hours}\n${projectInfo}`,
       };
     } catch (error) {
       return {

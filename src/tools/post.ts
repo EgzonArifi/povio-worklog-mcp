@@ -10,6 +10,7 @@ export async function postWorklog(args: PostWorklogArgs): Promise<PovioWorklogRe
   if (args.projectName) {
     try {
       projectId = await povioService.resolveProjectId(args.projectName);
+      console.error(`✓ Resolved "${args.projectName}" to project ID: ${projectId}`);
     } catch (error) {
       return {
         success: false,

@@ -29,7 +29,7 @@ export async function listProjects() {
     return {
       message: `Found ${projects.length} active project(s):`,
       projects: projectList,
-      summary: projects.map(p => `• ${p.name} (${p.roles.join(', ')})`).join('\n'),
+      summary: projectList.map(p => `• ${p.name} - ID: ${p.id} (${p.roles})`).join('\n'),
     };
   } catch (error) {
     throw new Error(`Failed to list projects: ${error instanceof Error ? error.message : 'Unknown error'}`);
