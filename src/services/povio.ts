@@ -1,4 +1,4 @@
-import { PovioWorklogRequest, PovioWorklogResponse, PovioProjectsResponse, PovioProject, PovioAvailableProject } from '../types/index.js';
+import { PovioWorklogRequest, PovioWorklogResponse, PovioProjectsResponse, PovioProject, PovioAvailableProject, PovioAvailableProjectsResponse } from '../types/index.js';
 
 export class PovioService {
   private apiToken: string;
@@ -166,8 +166,33 @@ export class PovioService {
         throw new Error(`Failed to fetch available projects: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json() as PovioAvailableProject[];
-      return data;
+      const rawData = await response.json() as any;
+      
+      // Handle different possible response structures
+      let data: PovioAvailableProject[];
+      
+      if (Array.isArray(rawData)) {
+        // Direct array response
+        data = rawData;
+      } else if (rawData.records && Array.isArray(rawData.records)) {
+        // Wrapped in records
+        data = rawData.records;
+      } else if (rawData.data && Array.isArray(rawData.data)) {
+        // Wrapped in data
+        data = rawData.data;
+      } else {
+        console.error('Unexpected response structure:', JSON.stringify(rawData, null, 2));
+        throw new Error('Unexpected response structure from available projects API');
+      }
+
+      // Filter out invalid entries
+      const validProjects = data.filter(p => p && typeof p.value === 'number' && typeof p.text === 'string');
+      
+      if (validProjects.length === 0) {
+        throw new Error('No valid projects found in API response');
+      }
+
+      return validProjects;
     } catch (error) {
       throw new Error(`Failed to fetch available projects: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

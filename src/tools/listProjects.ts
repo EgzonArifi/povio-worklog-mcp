@@ -7,18 +7,29 @@ export async function listProjects() {
     // Fetch projects with correct worklog IDs
     const availableProjects = await povioService.fetchAvailableProjects();
     
-    if (availableProjects.length === 0) {
+    if (!availableProjects || availableProjects.length === 0) {
       return {
         message: 'No active projects found.',
         projects: [],
+        summary: 'No projects available.'
       };
     }
 
     // Format project list for display with correct worklog IDs
-    const projectList = availableProjects.map(p => ({
-      name: p.text,
-      id: p.value.toString(),
-    }));
+    const projectList = availableProjects
+      .filter(p => p && p.text && typeof p.value === 'number')
+      .map(p => ({
+        name: p.text,
+        id: p.value.toString(),
+      }));
+
+    if (projectList.length === 0) {
+      return {
+        message: 'No valid projects found.',
+        projects: [],
+        summary: 'Projects data is invalid or empty.'
+      };
+    }
 
     return {
       message: `Found ${projectList.length} active project(s):`,
@@ -26,7 +37,9 @@ export async function listProjects() {
       summary: projectList.map(p => `• ${p.name} - ID: ${p.id}`).join('\n'),
     };
   } catch (error) {
-    throw new Error(`Failed to list projects: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error in listProjects:', errorMessage, error);
+    throw new Error(`Failed to list projects: ${errorMessage}`);
   }
 }
 

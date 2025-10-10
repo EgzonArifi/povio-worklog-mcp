@@ -69,6 +69,11 @@ export interface PovioAvailableProject {
   text: string;
 }
 
+export interface PovioAvailableProjectsResponse {
+  records?: PovioAvailableProject[];
+  [key: string]: any;
+}
+
 export interface PovioProjectGroup {
   id: number | string;
   name: string;
