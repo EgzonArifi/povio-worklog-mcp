@@ -64,6 +64,11 @@ export interface PovioProject {
   roles: string[];
 }
 
+export interface PovioAvailableProject {
+  value: number;
+  text: string;
+}
+
 export interface PovioProjectGroup {
   id: number | string;
   name: string;

@@ -1,9 +1,10 @@
-import { PovioWorklogRequest, PovioWorklogResponse, PovioProjectsResponse, PovioProject } from '../types/index.js';
+import { PovioWorklogRequest, PovioWorklogResponse, PovioProjectsResponse, PovioProject, PovioAvailableProject } from '../types/index.js';
 
 export class PovioService {
   private apiToken: string;
   private apiUrl: string = 'https://app.povio.com/api/castro/professional/time_logs';
   private projectsUrl: string = 'https://app.povio.com/api/castro/professional/projects';
+  private availableProjectsUrl: string = 'https://app.povio.com/api/castro/professional/time_logs/available_project_users';
 
   constructor(apiToken?: string) {
     this.apiToken = apiToken || process.env.POVIO_API_TOKEN || '';
@@ -106,7 +107,7 @@ export class PovioService {
   }
 
   /**
-   * Fetch user's projects from Povio
+   * Fetch user's projects from Povio (for display purposes - shows project paths)
    */
   async fetchProjects(tab: 'active' | 'archived' = 'active'): Promise<PovioProject[]> {
     try {
@@ -147,34 +148,60 @@ export class PovioService {
   }
 
   /**
-   * Resolve project name to project ID
+   * Fetch available projects with correct worklog IDs
+   * This endpoint returns the actual project IDs used for posting worklogs
+   */
+  async fetchAvailableProjects(): Promise<PovioAvailableProject[]> {
+    try {
+      const response = await fetch(this.availableProjectsUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+          'Cookie': this.apiToken,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch available projects: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json() as PovioAvailableProject[];
+      return data;
+    } catch (error) {
+      throw new Error(`Failed to fetch available projects: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Resolve project name to project ID using the correct worklog API
    */
   async resolveProjectId(projectName: string): Promise<number> {
-    const projects = await this.fetchProjects('active');
+    const projects = await this.fetchAvailableProjects();
     
     // Try exact match first (case insensitive)
     const exactMatch = projects.find(p => 
-      p.name.toLowerCase() === projectName.toLowerCase()
+      p.text.toLowerCase().trim() === projectName.toLowerCase().trim()
     );
     
     if (exactMatch) {
-      return this.extractProjectId(exactMatch.path);
+      return exactMatch.value;
     }
 
     // Try partial match
     const partialMatch = projects.find(p => 
-      p.name.toLowerCase().includes(projectName.toLowerCase())
+      p.text.toLowerCase().includes(projectName.toLowerCase())
     );
 
     if (partialMatch) {
-      return this.extractProjectId(partialMatch.path);
+      return partialMatch.value;
     }
 
     throw new Error(`Project "${projectName}" not found. Use list_povio_projects tool to see available projects.`);
   }
 
   /**
-   * Extract project ID from path like "/professional/projects/2598"
+   * Extract project ID from path like "/professional/projects/2598" (for display only)
    */
   private extractProjectId(path: string): number {
     const match = path.match(/\/professional\/projects\/(\d+)/);
