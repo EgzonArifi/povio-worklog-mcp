@@ -17,10 +17,10 @@ export async function listProjects() {
 
     // Format project list for display with correct worklog IDs
     const projectList = availableProjects
-      .filter(p => p && p.text && typeof p.value === 'number')
+      .filter(p => p && p.name && typeof p.id === 'number')
       .map(p => ({
-        name: p.text,
-        id: p.value.toString(),
+        name: p.name,
+        id: p.id.toString(),
       }));
 
     if (projectList.length === 0) {

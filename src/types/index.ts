@@ -65,13 +65,8 @@ export interface PovioProject {
 }
 
 export interface PovioAvailableProject {
-  value: number;
-  text: string;
-}
-
-export interface PovioAvailableProjectsResponse {
-  records?: PovioAvailableProject[];
-  [key: string]: any;
+  id: number;
+  name: string;
 }
 
 export interface PovioProjectGroup {

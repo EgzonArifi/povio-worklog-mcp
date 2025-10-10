@@ -1,4 +1,4 @@
-import { PovioWorklogRequest, PovioWorklogResponse, PovioProjectsResponse, PovioProject, PovioAvailableProject, PovioAvailableProjectsResponse } from '../types/index.js';
+import { PovioWorklogRequest, PovioWorklogResponse, PovioProjectsResponse, PovioProject, PovioAvailableProject } from '../types/index.js';
 
 export class PovioService {
   private apiToken: string;
@@ -150,6 +150,7 @@ export class PovioService {
   /**
    * Fetch available projects with correct worklog IDs
    * This endpoint returns the actual project IDs used for posting worklogs
+   * Response format: [{ id: 15886, name: "FaceFlip" }, ...]
    */
   async fetchAvailableProjects(): Promise<PovioAvailableProject[]> {
     try {
@@ -166,27 +167,21 @@ export class PovioService {
         throw new Error(`Failed to fetch available projects: ${response.status} ${response.statusText}`);
       }
 
-      const rawData = await response.json() as any;
+      const data = await response.json() as PovioAvailableProject[];
       
-      // Handle different possible response structures
-      let data: PovioAvailableProject[];
-      
-      if (Array.isArray(rawData)) {
-        // Direct array response
-        data = rawData;
-      } else if (rawData.records && Array.isArray(rawData.records)) {
-        // Wrapped in records
-        data = rawData.records;
-      } else if (rawData.data && Array.isArray(rawData.data)) {
-        // Wrapped in data
-        data = rawData.data;
-      } else {
-        console.error('Unexpected response structure:', JSON.stringify(rawData, null, 2));
-        throw new Error('Unexpected response structure from available projects API');
+      // Validate the response is an array
+      if (!Array.isArray(data)) {
+        console.error('Expected array but got:', JSON.stringify(data, null, 2));
+        throw new Error('API returned non-array response');
       }
 
       // Filter out invalid entries
-      const validProjects = data.filter(p => p && typeof p.value === 'number' && typeof p.text === 'string');
+      const validProjects = data.filter(p => 
+        p && 
+        typeof p.id === 'number' && 
+        typeof p.name === 'string' &&
+        p.name.trim().length > 0
+      );
       
       if (validProjects.length === 0) {
         throw new Error('No valid projects found in API response');
@@ -206,20 +201,20 @@ export class PovioService {
     
     // Try exact match first (case insensitive)
     const exactMatch = projects.find(p => 
-      p.text.toLowerCase().trim() === projectName.toLowerCase().trim()
+      p.name.toLowerCase().trim() === projectName.toLowerCase().trim()
     );
     
     if (exactMatch) {
-      return exactMatch.value;
+      return exactMatch.id;
     }
 
     // Try partial match
     const partialMatch = projects.find(p => 
-      p.text.toLowerCase().includes(projectName.toLowerCase())
+      p.name.toLowerCase().includes(projectName.toLowerCase())
     );
 
     if (partialMatch) {
-      return partialMatch.value;
+      return partialMatch.id;
     }
 
     throw new Error(`Project "${projectName}" not found. Use list_povio_projects tool to see available projects.`);
