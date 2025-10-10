@@ -36,7 +36,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: 'list_povio_projects',
-      description: 'List all active projects assigned to you in Povio. Shows project names and roles for easy reference when posting worklogs.',
+      description: `List all active projects assigned to you in Povio. Shows project names and IDs for easy reference when posting worklogs.
+
+Trigger examples:
+- "wl list"
+- "list my povio projects"
+- "show me my projects"
+- "what projects do I have"
+- "list projects"`,
       inputSchema: {
         type: 'object',
         properties: {},
@@ -45,7 +52,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'generate_worklog',
-      description: 'Generate a worklog from git commits for today or yesterday. Analyzes commit messages, extracts ticket numbers, and creates AI-enhanced, professional worklog descriptions following Povio guidelines. AI enhancement is ENABLED BY DEFAULT.',
+      description: `Generate a worklog from git commits for today or yesterday. Analyzes commit messages, extracts ticket numbers, and creates AI-enhanced, professional worklog descriptions following Povio guidelines. AI enhancement is ENABLED BY DEFAULT.
+
+Trigger examples:
+- "wl"
+- "wl today"
+- "wl yesterday"
+- "generate worklog"
+- "generate worklog for today"
+- "generate worklog for yesterday"
+- "what did I work on today"
+- "create worklog from my commits"`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -68,7 +85,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'post_worklog',
-      description: 'Post a worklog entry to Povio dashboard. Supports both project ID and project name. Uses DEFAULT_PROJECT_ID from environment if neither is provided.',
+      description: `Post a worklog entry to Povio dashboard. Supports both project ID and project name. Uses DEFAULT_PROJECT_ID from environment if neither is provided.
+
+Trigger examples:
+- "wl post 8"
+- "wl post FaceFlip 8"
+- "post worklog with 4 hours"
+- "post worklog to FaceFlip"
+- "post 6 hours to Autobiography"
+- "submit worklog for today"
+- "post [description] to [project] for [hours] hours"`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -98,7 +124,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'generate_and_post_worklog',
-      description: 'Generate worklog from git commits AND post it to Povio in one step. Supports both project ID and project name. AI enhancement is ENABLED BY DEFAULT - generation will pause for AI to create an enhanced description before posting.',
+      description: `Generate worklog from git commits AND post it to Povio in one step. Supports both project ID and project name. AI enhancement is ENABLED BY DEFAULT - generation will pause for AI to create an enhanced description before posting.
+
+Trigger examples:
+- "wl FaceFlip 8"
+- "wl Autobiography 4"
+- "wl yesterday FaceFlip 6"
+- "generate and post worklog for today with 8 hours"
+- "generate and post to FaceFlip, 5 hours"
+- "create and submit worklog to Autobiography for 3 hours"
+- "wl post [project] [hours]"`,
       inputSchema: {
         type: 'object',
         properties: {

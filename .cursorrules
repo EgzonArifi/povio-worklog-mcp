@@ -1,0 +1,40 @@
+# Povio Worklog Shortcuts
+
+## Quick Command Patterns
+
+When I use these patterns, interpret them as MCP tool calls:
+
+### List Projects
+- "wl list" → list_povio_projects
+- "projects" → list_povio_projects
+
+### Generate Worklog
+- "wl" → generate_worklog for today
+- "wl today" → generate_worklog for today
+- "wl yesterday" → generate_worklog for yesterday
+
+### Post Worklog
+- "wl post [hours]" → generate_and_post_worklog with default project
+- "wl post [project] [hours]" → generate_and_post_worklog with specific project
+- "post [hours] to [project]" → post_worklog
+
+### Combined (Generate + Post)
+- "wl [project] [hours]" → generate_and_post_worklog
+  Example: "wl FaceFlip 8" → generate for today, post to FaceFlip, 8 hours
+  Example: "wl Autobiography 4" → generate for today, post to Autobiography, 4 hours
+
+### Common Patterns
+- "wl yesterday FaceFlip 6" → generate yesterday's worklog, post to FaceFlip, 6 hours
+- "wl list then post 8" → list projects, then generate and post 8 hours to selected
+
+## Project Name Shortcuts
+Common project names for quick reference:
+- FaceFlip (ID: 15886)
+- Autobiography (ID: 14093)
+- "Povio Estimations" (ID: 14004)
+- "Bunny CDN Mobile" (ID: 13802)
+- "Team Leads" (ID: 13396)
+- "iOS Internal" (ID: 13247)
+
+Always use the povio-worklog MCP server tools for these commands.
+

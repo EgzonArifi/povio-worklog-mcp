@@ -71,6 +71,39 @@ After adding the configuration, restart Cursor to load the MCP server.
 
 Once configured, you can use natural language to interact with the worklog tools:
 
+### Quick Commands
+
+For faster workflow, use these short patterns:
+
+```
+wl                          → Generate worklog for today
+wl yesterday                → Generate worklog for yesterday  
+wl list                     → List Povio projects
+wl post FaceFlip 8          → Generate and post to FaceFlip, 8 hours
+wl FaceFlip 4               → Generate and post to FaceFlip, 4 hours
+```
+
+Or use full natural language:
+
+```
+"generate worklog for today"
+"post worklog to FaceFlip with 4 hours"
+"list my povio projects"
+```
+
+### Keyboard Shortcuts
+
+1. **Cursor Composer** (`Cmd+I` or `Cmd+K`): Type your command
+2. **Chat** (`Cmd+L`): Use for longer workflows
+3. **.cursorrules**: Add custom shortcuts (see `.cursorrules` file in project)
+
+### Pro Tips
+
+- Use `.cursorrules` file for project-specific shortcuts
+- Type "wl" for quick worklog commands (if using .cursorrules)
+- Save common project names as shortcuts in your rules
+- Chain commands: "wl list, then post to FaceFlip 8 hours"
+
 ### Generate Worklog (AI-Enhanced by Default)
 
 ```
