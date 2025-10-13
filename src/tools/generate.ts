@@ -37,6 +37,8 @@ function generateAIEnhancementPrompt(commits: any[], ticketNumbers: string[], di
     `- ${c.hash}: ${c.message} (${c.type})`
   ).join('\n');
 
+  const hasMultipleTickets = ticketNumbers.length > 1;
+
   return `
 📋 WORKLOG ENHANCEMENT REQUEST (${displayName})
 
@@ -51,30 +53,47 @@ POVIO GUIDELINES:
 ✓ Logs appear on client invoices - must be professional and appropriate
 ✓ Describe what was accomplished for the client (not technical details)
 ✓ Use dense, descriptive format combining multiple accomplishments
-✓ Include ticket numbers in [TICKET-123] format
+✓ Include ticket numbers in [TICKET-123] format DIRECTLY BEFORE their description
 ✓ Focus on business value and user-facing features
 ✓ Avoid: branch names, PR numbers, technical jargon, internal processes
-✓ Example: "[ENG-155] Implemented screenshot upload feature in developer settings"
+
+FORMAT REQUIREMENTS:
+${hasMultipleTickets ? 
+`✓ MULTIPLE TICKETS: Place each ticket number directly before its accomplishment
+✓ Format: [TICKET-1] Description one. [TICKET-2] Description two. [TICKET-3] Description three
+✓ This allows clear attribution and better invoicing/tracking` :
+`✓ SINGLE TICKET: Place ticket number at the start
+✓ Format: [TICKET-123] Description of what was accomplished`
+}
+
+EXAMPLES:
+Single ticket:
+  [ENG-155] Implemented screenshot upload feature in developer settings
+
+Multiple tickets:
+  [ENG-101] Set up initial project structure. [ENG-102] Implemented user authentication. [ENG-103] Created dashboard UI
+  [PROJ-45] Fixed login timeout issue. [PROJ-46] Added password reset functionality
 
 TASK:
-Generate a single, comprehensive worklog description (1-2 sentences) that:
-1. Groups related work by ticket number
+Generate a comprehensive worklog description that:
+1. Places each [TICKET] directly before its specific accomplishment
 2. Describes accomplishments in client-appropriate language
 3. Focuses on what was delivered, not how it was done
 4. Is concise but informative
+5. Uses periods to separate different tickets' work
 
 IMPORTANT FORMATTING:
 Present the enhanced description in TWO formats for best user experience:
 
 1. ENHANCED DESCRIPTION (readable):
-[TICKET-123] Your enhanced description here
+${hasMultipleTickets ? '[TICKET-1] Description one. [TICKET-2] Description two' : '[TICKET-123] Your enhanced description here'}
 
 2. COPYABLE VERSION:
 \`\`\`
-[TICKET-123] Your enhanced description here
+${hasMultipleTickets ? '[TICKET-1] Description one. [TICKET-2] Description two' : '[TICKET-123] Your enhanced description here'}
 \`\`\`
 
-Then provide brief context explaining why this follows Povio guidelines.
+Then provide brief context explaining why this follows Povio guidelines and maintains clear ticket attribution.
 `.trim();
 }
 

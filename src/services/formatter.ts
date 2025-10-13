@@ -79,18 +79,38 @@ export class WorklogFormatter {
     // Extract key actions from commit messages
     const actions = commits.map(c => this.extractAction(c.message));
     
-    // Combine similar actions
+    // Remove duplicates while preserving order
     const uniqueActions = [...new Set(actions)];
     
-    // Format into a sentence
+    // Format into a sentence with proper capitalization
     if (uniqueActions.length === 1) {
-      return uniqueActions[0];
+      return this.capitalizeFirst(uniqueActions[0]);
     } else if (uniqueActions.length === 2) {
-      return uniqueActions.join(' and ');
+      return this.capitalizeFirst(uniqueActions[0]) + ' and ' + this.lowercaseFirst(uniqueActions[1]);
     } else {
-      const last = uniqueActions.pop();
-      return uniqueActions.join(', ') + ', and ' + last;
+      const formattedActions = uniqueActions.map((action, index) => {
+        if (index === 0) return this.capitalizeFirst(action);
+        return this.lowercaseFirst(action);
+      });
+      const last = formattedActions.pop();
+      return formattedActions.join(', ') + ', and ' + last;
     }
+  }
+
+  /**
+   * Capitalize first letter of a string
+   */
+  private static capitalizeFirst(str: string): string {
+    if (!str) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  /**
+   * Lowercase first letter of a string (for continuation in sentences)
+   */
+  private static lowercaseFirst(str: string): string {
+    if (!str) return str;
+    return str.charAt(0).toLowerCase() + str.slice(1);
   }
 
   /**
@@ -98,8 +118,8 @@ export class WorklogFormatter {
    * Creates client-appropriate descriptions following Povio guidelines
    */
   private static extractAction(message: string): string {
-    // Remove ticket numbers
-    let clean = message.replace(/[A-Z]+-\d+/g, '').trim();
+    // Remove ticket numbers (e.g., ENG-160, [ENG-160])
+    let clean = message.replace(/\[?[A-Z]+-\d+\]?:?/g, '').trim();
     
     // Remove merge commit prefix and extract meaningful description
     const mergeMatch = clean.match(/^Merge pull request #\d+ from [\w-/]+\s*(.+)/i);
@@ -109,15 +129,25 @@ export class WorklogFormatter {
       clean = clean.replace(/^Merge pull request #\d+ from [\w-/]+\s*/i, '');
     }
     
+    // Remove PR numbers like (#3), (#123)
+    clean = clean.replace(/\s*\(#\d+\)\s*$/, '').trim();
+    
     // Remove branch names
     clean = clean.replace(/^Merge branch '[\w-/]+'/, '');
+    clean = clean.replace(/^\[[\w-]+\]\s*/, ''); // Remove [branch-name] prefix
     
     // Remove conventional commit prefixes for client-facing description
     clean = clean.replace(/^(feat|fix|docs|style|refactor|test|chore):\s*/i, '');
     
-    // Capitalize first letter if needed
-    if (clean.length > 0 && clean[0] !== clean[0].toUpperCase()) {
-      clean = clean[0].toUpperCase() + clean.slice(1);
+    // Remove colons and dashes at the start
+    clean = clean.replace(/^[:;\-\s]+/, '').trim();
+    
+    // Ensure meaningful description with proper capitalization
+    if (clean.length > 0) {
+      // Only capitalize if first letter is lowercase
+      if (clean[0] !== clean[0].toUpperCase()) {
+        clean = clean[0].toUpperCase() + clean.slice(1);
+      }
     }
     
     // Ensure meaningful description
