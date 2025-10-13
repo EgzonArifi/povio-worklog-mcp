@@ -35,7 +35,7 @@ export interface PovioWorklogResponse {
 }
 
 export interface GenerateWorklogArgs {
-  timeframe: 'today' | 'yesterday';
+  timeframe: string; // "today", "yesterday", or specific date like "2024-10-11"
   repository?: string;
   enhanceWithAI?: boolean;
 }
@@ -49,7 +49,7 @@ export interface PostWorklogArgs {
 }
 
 export interface GenerateAndPostArgs {
-  timeframe: 'today' | 'yesterday';
+  timeframe: string; // "today", "yesterday", or specific date like "2024-10-11"
   projectId?: number;
   projectName?: string;
   hours: number;

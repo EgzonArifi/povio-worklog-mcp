@@ -52,24 +52,27 @@ Trigger examples:
     },
     {
       name: 'generate_worklog',
-      description: `Generate a worklog from git commits for today or yesterday. Analyzes commit messages, extracts ticket numbers, and creates AI-enhanced, professional worklog descriptions following Povio guidelines. AI enhancement is ENABLED BY DEFAULT.
+      description: `Generate a worklog from git commits. Analyzes commit messages, extracts ticket numbers, and creates AI-enhanced, professional worklog descriptions following Povio guidelines. AI enhancement is ENABLED BY DEFAULT.
+
+Supported date formats:
+- "today", "yesterday"
+- Specific dates: "2024-10-11", "10/11/2024", "11.10.2024"
 
 Trigger examples:
 - "wl"
 - "wl today"
 - "wl yesterday"
+- "wl 2024-10-10"
 - "generate worklog"
-- "generate worklog for today"
 - "generate worklog for yesterday"
-- "what did I work on today"
-- "create worklog from my commits"`,
+- "generate worklog for 2024-10-10"
+- "what did I work on yesterday"`,
       inputSchema: {
         type: 'object',
         properties: {
           timeframe: {
             type: 'string',
-            enum: ['today', 'yesterday'],
-            description: 'Generate worklog for today or yesterday',
+            description: 'Date format: "today", "yesterday", or specific date like "2024-10-11"',
           },
           repository: {
             type: 'string',
@@ -126,10 +129,15 @@ Trigger examples:
       name: 'generate_and_post_worklog',
       description: `Generate worklog from git commits AND post it to Povio in one step. Supports both project ID and project name. AI enhancement is ENABLED BY DEFAULT - generation will pause for AI to create an enhanced description before posting.
 
+Supported date formats:
+- "today", "yesterday"
+- Specific dates: "2024-10-11", "10/11/2024", "11.10.2024"
+
 Trigger examples:
 - "wl FaceFlip 8"
 - "wl Autobiography 4"
 - "wl yesterday FaceFlip 6"
+- "wl 2024-10-10 FaceFlip 8"
 - "generate and post worklog for today with 8 hours"
 - "generate and post to FaceFlip, 5 hours"
 - "create and submit worklog to Autobiography for 3 hours"
@@ -139,8 +147,7 @@ Trigger examples:
         properties: {
           timeframe: {
             type: 'string',
-            enum: ['today', 'yesterday'],
-            description: 'Generate worklog for today or yesterday',
+            description: 'Date format: "today", "yesterday", or specific date like "2024-10-11"',
           },
           projectId: {
             type: 'number',

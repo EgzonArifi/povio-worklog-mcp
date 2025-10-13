@@ -32,15 +32,28 @@ export class GitService {
   }
 
   /**
+   * Get commits for a specific date
+   */
+  async getCommitsForDate(date: Date): Promise<ParsedCommit[]> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    return this.getCommitsBetween(startOfDay, endOfDay);
+  }
+
+  /**
    * Get commits since a specific date
    */
   async getCommitsSince(since: Date): Promise<ParsedCommit[]> {
-    // Get current user email to filter commits
-    const userEmail = await this.git.raw(['config', 'user.email']);
+    // Get current user name to filter commits (more reliable than email, works with GitHub CLI)
+    const userName = await this.git.raw(['config', 'user.name']);
     
     const log: LogResult = await this.git.log({
-      '--since': since.toISOString(),
-      '--author': userEmail.trim(),
+      '--since': this.formatDateForGit(since),
+      '--author': userName.trim(),
       '--all': null,
     });
 
@@ -51,17 +64,32 @@ export class GitService {
    * Get commits between two dates
    */
   async getCommitsBetween(from: Date, to: Date): Promise<ParsedCommit[]> {
-    // Get current user email to filter commits
-    const userEmail = await this.git.raw(['config', 'user.email']);
+    // Get current user name to filter commits (more reliable than email, works with GitHub CLI)
+    const userName = await this.git.raw(['config', 'user.name']);
     
     const log: LogResult = await this.git.log({
-      '--since': from.toISOString(),
-      '--until': to.toISOString(),
-      '--author': userEmail.trim(),
+      '--since': this.formatDateForGit(from),
+      '--until': this.formatDateForGit(to),
+      '--author': userName.trim(),
       '--all': null,
     });
 
     return this.parseCommits(log);
+  }
+
+  /**
+   * Format a Date object as a local time string for git
+   * Returns format: "YYYY-MM-DD HH:MM:SS"
+   * This ensures git interprets the date in local timezone, not UTC
+   */
+  private formatDateForGit(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 
   /**

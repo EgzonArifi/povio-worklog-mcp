@@ -12,6 +12,7 @@ When I use these patterns, interpret them as MCP tool calls:
 - "wl" → generate_worklog for today
 - "wl today" → generate_worklog for today
 - "wl yesterday" → generate_worklog for yesterday
+- "wl [YYYY-MM-DD]" → generate_worklog for specific date
 
 ### Post Worklog
 - "wl post [hours]" → generate_and_post_worklog with default project
@@ -25,6 +26,7 @@ When I use these patterns, interpret them as MCP tool calls:
 
 ### Common Patterns
 - "wl yesterday FaceFlip 6" → generate yesterday's worklog, post to FaceFlip, 6 hours
+- "wl 2024-10-10 FaceFlip 8" → generate specific date worklog, post to FaceFlip, 8 hours
 - "wl list then post 8" → list projects, then generate and post 8 hours to selected
 
 ## Project Name Shortcuts

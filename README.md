@@ -7,6 +7,7 @@ A Model Context Protocol (MCP) server that provides worklog generation from git 
 - 📋 **List Projects**: Easily view all your active Povio projects
 - 🏷️ **Use Project Names**: Simply use project names like "FaceFlip" or "Autobiography"
 - 🔍 **Generate Worklog**: Automatically analyze git commits and generate professional worklog descriptions
+- 📅 **Flexible Dates**: Support for "today", "yesterday", and specific dates (e.g., "2024-10-11")
 - 🤖 **AI Enhancement (Default)**: AI automatically generates optimized, guideline-compliant descriptions from your commits
 - 📤 **Post to Povio**: Post worklogs directly to Povio dashboard
 - ⚡ **Combined Action**: Generate and post in one step
@@ -60,6 +61,7 @@ Add the MCP server to your Cursor settings:
 **Configuration Details:**
 - **Path:** Replace with your actual absolute path to the server
 - **POVIO_API_TOKEN:** Your Povio dashboard cookie (required)
+- **Note:** The tool uses the current working directory of your Cursor workspace as the git repository
 
 ### Restart Cursor
 
@@ -75,16 +77,20 @@ For faster workflow, use these short patterns:
 
 ```
 wl                          → Generate worklog for today
-wl yesterday                → Generate worklog for yesterday  
+wl yesterday                → Generate worklog for yesterday
+wl 2024-10-10               → Generate worklog for specific date
 wl list                     → List Povio projects
 wl post FaceFlip 8          → Generate and post to FaceFlip, 8 hours
 wl FaceFlip 4               → Generate and post to FaceFlip, 4 hours
+wl yesterday FaceFlip 8     → Generate yesterday's worklog and post
 ```
 
 Or use full natural language:
 
 ```
 "generate worklog for today"
+"generate worklog for yesterday"
+"generate worklog for 2024-10-10"
 "post worklog to FaceFlip with 4 hours"
 "list my povio projects"
 ```
@@ -183,7 +189,9 @@ AI: [Uses list_povio_projects tool]
 Generate a worklog from git commits.
 
 **Parameters:**
-- `timeframe` (required): `"today"` or `"yesterday"`
+- `timeframe` (required): Date format - supports:
+  - `"today"`, `"yesterday"`
+  - Specific dates: `"2024-10-11"`, `"10/11/2024"`, `"11.10.2024"`
 - `repository` (optional): Path to git repository (defaults to current directory)
 - `enhanceWithAI` (optional): Defaults to `true`. Set to `false` to disable AI enhancement (not recommended)
 
@@ -242,7 +250,9 @@ AI: [Uses post_worklog tool]
 Combined tool that generates from commits and posts to Povio.
 
 **Parameters:**
-- `timeframe` (required): `"today"` or `"yesterday"`
+- `timeframe` (required): Date format - supports:
+  - `"today"`, `"yesterday"`
+  - Specific dates: `"2024-10-11"`, `"10/11/2024"`, `"11.10.2024"`
 - `projectName` (required): Project name (e.g., "FaceFlip", "Autobiography")
 - `hours` (required): Number of hours worked
 - `repository` (optional): Path to git repository

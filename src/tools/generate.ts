@@ -1,41 +1,44 @@
 import { GitService } from '../services/git.js';
 import { WorklogFormatter } from '../services/formatter.js';
+import { DateParser } from '../services/dateParser.js';
 import { GenerateWorklogArgs, WorklogData } from '../types/index.js';
 
 export async function generateWorklog(args: GenerateWorklogArgs): Promise<WorklogData> {
   const gitService = new GitService(args.repository);
   
-  // Get commits based on timeframe
-  const commits = args.timeframe === 'today' 
-    ? await gitService.getTodayCommits()
-    : await gitService.getYesterdayCommits();
+  // Parse the timeframe into a date
+  const parsedDate = DateParser.parse(args.timeframe);
   
-  // Determine the date
-  const date = args.timeframe === 'today'
-    ? new Date().toISOString().split('T')[0]
-    : new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  // Get commits for the parsed date
+  const commits = await gitService.getCommitsForDate(parsedDate.date);
+  
+  // Format date as YYYY-MM-DD (using local timezone to avoid timezone shifts)
+  const year = parsedDate.date.getFullYear();
+  const month = String(parsedDate.date.getMonth() + 1).padStart(2, '0');
+  const day = String(parsedDate.date.getDate()).padStart(2, '0');
+  const dateString = `${year}-${month}-${day}`;
   
   // Format into worklog
-  const worklog = WorklogFormatter.formatWorklog(commits, date);
+  const worklog = WorklogFormatter.formatWorklog(commits, dateString);
   
   // AI enhancement is enabled by default (can be disabled with enhanceWithAI: false)
   const shouldEnhance = args.enhanceWithAI !== false;
   
   if (shouldEnhance) {
     worklog.rawCommits = commits;
-    worklog.aiEnhancementPrompt = generateAIEnhancementPrompt(commits, worklog.ticketNumbers);
+    worklog.aiEnhancementPrompt = generateAIEnhancementPrompt(commits, worklog.ticketNumbers, parsedDate.displayName);
   }
   
   return worklog;
 }
 
-function generateAIEnhancementPrompt(commits: any[], ticketNumbers: string[]): string {
+function generateAIEnhancementPrompt(commits: any[], ticketNumbers: string[], displayName: string): string {
   const commitDetails = commits.map(c => 
     `- ${c.hash}: ${c.message} (${c.type})`
   ).join('\n');
 
   return `
-📋 WORKLOG ENHANCEMENT REQUEST
+📋 WORKLOG ENHANCEMENT REQUEST (${displayName})
 
 Based on these commits, generate an improved worklog description following Povio guidelines:
 
