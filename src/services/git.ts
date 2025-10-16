@@ -45,36 +45,63 @@ export class GitService {
   }
 
   /**
-   * Get commits since a specific date
+   * Get commits since a specific date (using author date, not commit date)
    */
   async getCommitsSince(since: Date): Promise<ParsedCommit[]> {
     // Get current user name to filter commits (more reliable than email, works with GitHub CLI)
     const userName = await this.git.raw(['config', 'user.name']);
     
+    // Fetch commits from a wider range to account for merge delays
+    // We'll filter by author date in code
+    const widerSince = new Date(since);
+    widerSince.setDate(widerSince.getDate() - 7); // Look back 7 extra days
+    
     const log: LogResult = await this.git.log({
-      '--since': this.formatDateForGit(since),
+      '--since': this.formatDateForGit(widerSince),
       '--author': userName.trim(),
       '--all': null,
     });
 
-    return this.parseCommits(log);
+    const commits = this.parseCommits(log);
+    
+    // Filter by author date to ensure commits appear on the day they were authored
+    return commits.filter(commit => {
+      const commitDate = new Date(commit.date);
+      return commitDate >= since;
+    });
   }
 
   /**
-   * Get commits between two dates
+   * Get commits between two dates (using author date, not commit date)
+   * This prevents duplicates when PRs are merged on a different day than authored
    */
   async getCommitsBetween(from: Date, to: Date): Promise<ParsedCommit[]> {
     // Get current user name to filter commits (more reliable than email, works with GitHub CLI)
     const userName = await this.git.raw(['config', 'user.name']);
     
+    // Fetch commits from a wider range to account for merge delays
+    // Git's --since/--until use commit date by default, so we fetch wider and filter by author date
+    const widerFrom = new Date(from);
+    widerFrom.setDate(widerFrom.getDate() - 7); // Look back 7 extra days
+    
+    const widerTo = new Date(to);
+    widerTo.setDate(widerTo.getDate() + 1); // Look ahead 1 extra day
+    
     const log: LogResult = await this.git.log({
-      '--since': this.formatDateForGit(from),
-      '--until': this.formatDateForGit(to),
+      '--since': this.formatDateForGit(widerFrom),
+      '--until': this.formatDateForGit(widerTo),
       '--author': userName.trim(),
       '--all': null,
     });
 
-    return this.parseCommits(log);
+    const commits = this.parseCommits(log);
+    
+    // Filter by author date to ensure commits appear on the day they were authored
+    // This prevents showing commits on the day they were merged if authored earlier
+    return commits.filter(commit => {
+      const commitDate = new Date(commit.date);
+      return commitDate >= from && commitDate < to;
+    });
   }
 
   /**
