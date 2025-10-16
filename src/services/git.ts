@@ -124,9 +124,10 @@ export class GitService {
   /**
    * Parse git log into structured commits
    * Filters out stash commits, merge commits, and other non-relevant commits
+   * Also removes duplicates caused by rebasing/squashing
    */
   private parseCommits(log: LogResult): ParsedCommit[] {
-    return log.all
+    const commits = log.all
       .filter(commit => !this.isStashCommit(commit.message))
       .filter(commit => !this.isMergeCommit(commit.message))
       .map(commit => ({
@@ -137,6 +138,9 @@ export class GitService {
         ticketNumber: this.extractTicketNumber(commit.message),
         type: this.determineCommitType(commit.message),
       }));
+
+    // Remove duplicates caused by rebasing/squashing
+    return this.deduplicateCommits(commits);
   }
 
   /**
@@ -167,6 +171,52 @@ export class GitService {
     ];
     
     return mergePatterns.some(pattern => pattern.test(message));
+  }
+
+  /**
+   * Normalize commit message for comparison
+   * Removes PR numbers, extra whitespace, and other variations
+   */
+  private normalizeCommitMessage(message: string): string {
+    return message
+      .toLowerCase()
+      .trim()
+      // Remove PR numbers like (#123)
+      .replace(/\(#\d+\)/g, '')
+      // Remove extra whitespace
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /**
+   * Remove duplicate commits that have the same message but different hashes
+   * This happens when commits are rebased or squashed
+   * Keeps the version with PR number if available, otherwise keeps the first one
+   */
+  private deduplicateCommits(commits: ParsedCommit[]): ParsedCommit[] {
+    const seen = new Map<string, ParsedCommit>();
+
+    for (const commit of commits) {
+      const normalized = this.normalizeCommitMessage(commit.message);
+      const existing = seen.get(normalized);
+
+      if (!existing) {
+        // First time seeing this message
+        seen.set(normalized, commit);
+      } else {
+        // Duplicate found - keep the one with PR number if available
+        const commitHasPRNumber = /\(#\d+\)/.test(commit.message);
+        const existingHasPRNumber = /\(#\d+\)/.test(existing.message);
+
+        if (commitHasPRNumber && !existingHasPRNumber) {
+          // Replace with the version that has PR number
+          seen.set(normalized, commit);
+        }
+        // Otherwise keep the existing one (first occurrence or the one with PR number)
+      }
+    }
+
+    return Array.from(seen.values());
   }
 
   /**

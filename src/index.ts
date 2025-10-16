@@ -39,7 +39,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       description: `List all active projects assigned to you in Povio. Shows project names and IDs for easy reference when posting worklogs.
 
 Trigger examples:
-- "-wl list"
+- "wl list"
 - "list my povio projects"
 - "show me my projects"
 - "what projects do I have"
