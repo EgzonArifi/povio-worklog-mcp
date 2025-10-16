@@ -60,6 +60,7 @@ export class GitService {
       '--since': this.formatDateForGit(widerSince),
       '--author': userName.trim(),
       '--all': null,
+      '--no-merges': null, // Exclude merge commits
     });
 
     const commits = this.parseCommits(log);
@@ -92,6 +93,7 @@ export class GitService {
       '--until': this.formatDateForGit(widerTo),
       '--author': userName.trim(),
       '--all': null,
+      '--no-merges': null, // Exclude merge commits
     });
 
     const commits = this.parseCommits(log);
@@ -121,11 +123,12 @@ export class GitService {
 
   /**
    * Parse git log into structured commits
-   * Filters out stash commits and other non-relevant commits
+   * Filters out stash commits, merge commits, and other non-relevant commits
    */
   private parseCommits(log: LogResult): ParsedCommit[] {
     return log.all
       .filter(commit => !this.isStashCommit(commit.message))
+      .filter(commit => !this.isMergeCommit(commit.message))
       .map(commit => ({
         hash: commit.hash.substring(0, 7),
         message: commit.message,
@@ -147,6 +150,23 @@ export class GitService {
     ];
     
     return stashPatterns.some(pattern => pattern.test(message));
+  }
+
+  /**
+   * Check if a commit is a merge commit
+   * Merge commits don't represent actual work, so we exclude them
+   */
+  private isMergeCommit(message: string): boolean {
+    const mergePatterns = [
+      /^Merge pull request #\d+/i,
+      /^Merge branch /i,
+      /^Merge remote-tracking branch /i,
+      /^Merge\s+'\S+'\s+into\s+/i,
+      /^Merged in /i,
+      /^\(Merged by /i,
+    ];
+    
+    return mergePatterns.some(pattern => pattern.test(message));
   }
 
   /**
