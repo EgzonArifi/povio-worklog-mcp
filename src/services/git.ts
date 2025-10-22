@@ -61,6 +61,7 @@ export class GitService {
       '--author': userName.trim(),
       '--all': null,
       '--no-merges': null, // Exclude merge commits
+      '--date': 'iso', // Explicitly request ISO format for consistent parsing
     });
 
     const commits = this.parseCommits(log);
@@ -94,6 +95,7 @@ export class GitService {
       '--author': userName.trim(),
       '--all': null,
       '--no-merges': null, // Exclude merge commits
+      '--date': 'iso', // Explicitly request ISO format for consistent parsing
     });
 
     const commits = this.parseCommits(log);
@@ -159,6 +161,7 @@ export class GitService {
   /**
    * Check if a commit is a merge commit
    * Merge commits don't represent actual work, so we exclude them
+   * This includes GitHub squash/merge commits that have PR numbers
    */
   private isMergeCommit(message: string): boolean {
     const mergePatterns = [
@@ -168,6 +171,9 @@ export class GitService {
       /^Merge\s+'\S+'\s+into\s+/i,
       /^Merged in /i,
       /^\(Merged by /i,
+      // GitHub squash/merge commits often end with (#PR_NUMBER) at the end
+      // e.g., "[ENG-174] Implement ios widget with firebase integration (#15)"
+      /\(#\d+\)\s*$/,
     ];
     
     return mergePatterns.some(pattern => pattern.test(message));
