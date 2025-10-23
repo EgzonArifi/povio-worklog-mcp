@@ -1,6 +1,7 @@
 export interface GitCommit {
   hash: string;
   message: string;
+  body?: string; // Commit description/body (optional)
   date: string;
   author: string;
 }

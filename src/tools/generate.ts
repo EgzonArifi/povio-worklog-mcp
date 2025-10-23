@@ -33,9 +33,16 @@ export async function generateWorklog(args: GenerateWorklogArgs): Promise<Worklo
 }
 
 function generateAIEnhancementPrompt(commits: any[], ticketNumbers: string[], displayName: string): string {
-  const commitDetails = commits.map(c => 
-    `- ${c.hash}: ${c.message} (${c.type})`
-  ).join('\n');
+  const commitDetails = commits.map(c => {
+    let detail = `- ${c.hash}: ${c.message} (${c.type})`;
+    // Include commit body if present for richer context
+    if (c.body && c.body.trim()) {
+      // Indent body lines for better readability
+      const bodyLines = c.body.trim().split('\n').map((line: string) => `  ${line}`).join('\n');
+      detail += `\n${bodyLines}`;
+    }
+    return detail;
+  }).join('\n');
 
   const hasMultipleTickets = ticketNumbers.length > 1;
 

@@ -135,6 +135,7 @@ export class GitService {
       .map(commit => ({
         hash: commit.hash.substring(0, 7),
         message: commit.message,
+        body: commit.body || undefined, // Include commit body if present
         date: commit.date,
         author: commit.author_name,
         ticketNumber: this.extractTicketNumber(commit.message),
