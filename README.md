@@ -1,6 +1,23 @@
 # Povio Worklog MCP Server
 
-A Model Context Protocol (MCP) server that provides worklog generation from git commits and integration with Povio dashboard.
+[![npm version](https://badge.fury.io/js/povio-worklog-mcp.svg)](https://www.npmjs.com/package/povio-worklog-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
+
+A Model Context Protocol (MCP) server that provides automated worklog generation from git commits with AI enhancement and seamless Povio dashboard integration.
+
+**Transform this:**
+```bash
+git log  # Copy commits manually
+# Open Povio dashboard
+# Fill in project, hours, description
+# Submit
+```
+
+**Into this:**
+```
+wl FaceFlip 8  # Done! ✓
+```
 
 ## Features
 
@@ -16,31 +33,9 @@ A Model Context Protocol (MCP) server that provides worklog generation from git 
 
 ## Installation
 
-> **Note:** These steps are only needed once during initial setup, or after you make changes to the source code.
+### Quick Start (Recommended - npm)
 
-### 1. Install Dependencies
-
-```bash
-npm install
-```
-
-### 2. Build the Server
-
-```bash
-npm run build
-```
-
-This creates the compiled JavaScript in the `dist/` directory.
-
-**When to rebuild:**
-- ✅ First time setup
-- ✅ After pulling updates from git
-- ✅ After making changes to `src/` files
-- ❌ Not needed for regular daily use
-
-## Cursor Configuration
-
-Add the MCP server to your Cursor settings:
+No need to clone! Just add the configuration to Cursor:
 
 **File:** `~/.cursor/mcp.json`
 
@@ -48,8 +43,8 @@ Add the MCP server to your Cursor settings:
 {
   "mcpServers": {
     "povio-worklog": {
-      "command": "node",
-      "args": ["/absolute/path/to/povio-worklog-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "povio-worklog-mcp"],
       "env": {
         "POVIO_API_TOKEN": "your-povio-cookie-token"
       }
@@ -58,10 +53,58 @@ Add the MCP server to your Cursor settings:
 }
 ```
 
+**That's it!** The package will be automatically downloaded and run via npx.
+
 **Configuration Details:**
-- **Path:** Replace with your actual absolute path to the server
-- **POVIO_API_TOKEN:** Your Povio dashboard cookie (required)
+- **POVIO_API_TOKEN:** Your Povio dashboard cookie (required - see [Getting Your Token](#getting-your-povio-api-token) below)
 - **Note:** The tool uses the current working directory of your Cursor workspace as the git repository
+- **Updates:** npx automatically uses the latest version on each run
+
+### Alternative: Local Development Installation
+
+If you want to contribute or modify the source code:
+
+#### 1. Clone the Repository
+
+```bash
+git clone https://github.com/egzonarifi/mcp-server.git
+cd mcp-server
+```
+
+#### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+#### 3. Build the Server
+
+```bash
+npm run build
+```
+
+#### 4. Configure Cursor
+
+**File:** `~/.cursor/mcp.json`
+
+```json
+{
+  "mcpServers": {
+    "povio-worklog": {
+      "command": "node",
+      "args": ["/absolute/path/to/mcp-server/dist/index.js"],
+      "env": {
+        "POVIO_API_TOKEN": "your-povio-cookie-token"
+      }
+    }
+  }
+}
+```
+
+**When to rebuild:**
+- ✅ First time setup
+- ✅ After pulling updates from git
+- ✅ After making changes to `src/` files
 
 ### Restart Cursor
 

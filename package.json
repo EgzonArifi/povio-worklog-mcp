@@ -1,21 +1,50 @@
 {
-  "name": "worklog-mcp-server",
+  "name": "povio-worklog-mcp",
   "version": "1.0.0",
-  "description": "MCP server for worklog generation and Povio integration",
+  "description": "Model Context Protocol (MCP) server for automated worklog generation from git commits with AI enhancement and Povio dashboard integration",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "worklog-mcp-server": "dist/index.js"
+    "povio-worklog-mcp": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
   },
-  "keywords": ["mcp", "worklog", "povio", "git"],
-  "author": "",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "worklog",
+    "povio",
+    "git",
+    "ai",
+    "cursor",
+    "claude",
+    "time-tracking",
+    "automation"
+  ],
+  "author": "Egzon Arifi",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/egzonarifi/mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/egzonarifi/mcp-server/issues"
+  },
+  "homepage": "https://github.com/egzonarifi/mcp-server#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
     "simple-git": "^3.25.0"
