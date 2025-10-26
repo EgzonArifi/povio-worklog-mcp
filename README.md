@@ -56,7 +56,7 @@ No need to clone! Just add the configuration to Cursor:
 **That's it!** The package will be automatically downloaded and run via npx.
 
 **Configuration Details:**
-- **POVIO_API_TOKEN:** Your Povio dashboard cookie (required - see [Getting Your Token](#getting-your-povio-api-token) below)
+- **POVIO_API_TOKEN:** Your Povio dashboard cookie in format `_poviolabs_dashboard=VALUE` (see [Getting Your Token](#getting-your-povio-api-token) below for detailed instructions)
 - **Note:** The tool uses the current working directory of your Cursor workspace as the git repository
 - **Updates:** npx automatically uses the latest version on each run
 
@@ -372,12 +372,62 @@ The tool automatically formats your commits to follow these guidelines. With **A
 
 ## Getting Your Povio API Token
 
-1. Log in to Povio Dashboard
-2. Open browser DevTools (F12)
-3. Go to Application → Cookies
-4. Find the `_poviolabs_dashboard` cookie
-5. Copy its value (the entire string)
-6. Add it to your Cursor MCP configuration
+The `POVIO_API_TOKEN` must include **both the cookie name and its value** in this exact format:
+
+```
+_poviolabs_dashboard=YOUR_COOKIE_VALUE_HERE
+```
+
+### Step-by-Step Instructions:
+
+1. **Log in** to [Povio Dashboard](https://app.povio.com)
+
+2. **Open DevTools** (Press `F12` or right-click → Inspect)
+
+3. **Go to Application/Storage tab**
+   - Chrome/Edge: Click "Application" tab → "Cookies" → `https://app.povio.com`
+   - Firefox: Click "Storage" tab → "Cookies" → `https://app.povio.com`
+   - Safari: Enable Developer menu, then Develop → Show Web Inspector → Storage
+
+4. **Find the cookie** named `_poviolabs_dashboard`
+
+5. **Copy the ENTIRE cookie** in this format:
+   ```
+   _poviolabs_dashboard=s%3Aabcd1234...xyz
+   ```
+   
+   ⚠️ **Important**: 
+   - Include `_poviolabs_dashboard=` at the start
+   - Copy the complete value (it's usually very long, 300-500 characters)
+   - Don't add quotes around it in the config
+
+6. **Add to your Cursor MCP configuration** (`~/.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "povio-worklog": {
+      "command": "npx",
+      "args": ["-y", "povio-worklog-mcp"],
+      "env": {
+        "POVIO_API_TOKEN": "_poviolabs_dashboard=s%3Aabcd1234...your-actual-cookie-value"
+      }
+    }
+  }
+}
+```
+
+### Example (shortened for display):
+
+```json
+"POVIO_API_TOKEN": "_poviolabs_dashboard=s%3AY1lndE1GK256eTZzZmd0L2s5ODc2djdqaTdrL2VaZFlFS2..."
+```
+
+### Troubleshooting:
+
+- ❌ **Wrong**: `"your-povio-cookie-token"` (placeholder text)
+- ❌ **Wrong**: `"s%3Aabcd1234..."` (missing cookie name)
+- ✅ **Correct**: `"_poviolabs_dashboard=s%3Aabcd1234..."`
 
 ## Your Projects
 
