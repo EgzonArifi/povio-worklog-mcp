@@ -30,7 +30,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EgzonArifi/povio-worklog-mcp.git"
+    "url": "git+https://github.com/EgzonArifi/povio-worklog-mcp.git"
   },
   "bugs": {
     "url": "https://github.com/EgzonArifi/povio-worklog-mcp/issues"
