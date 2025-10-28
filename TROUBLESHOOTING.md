@@ -198,3 +198,4 @@ nvm install --lts
 - Check for updates: `npm view povio-worklog-mcp version`
 - Update to latest: Clear cache and restart Cursor (npx auto-updates)
 
+
