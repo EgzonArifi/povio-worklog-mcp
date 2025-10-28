@@ -30,12 +30,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/egzonarifi/mcp-server.git"
+    "url": "https://github.com/EgzonArifi/povio-worklog-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/egzonarifi/mcp-server/issues"
+    "url": "https://github.com/EgzonArifi/povio-worklog-mcp/issues"
   },
-  "homepage": "https://github.com/egzonarifi/mcp-server#readme",
+  "homepage": "https://github.com/EgzonArifi/povio-worklog-mcp#readme",
   "engines": {
     "node": ">=18.0.0"
   },

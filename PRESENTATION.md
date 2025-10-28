@@ -909,7 +909,7 @@ ROI: 4,582% 🚀
 
 ```bash
 # 1. Fork & Clone
-git clone https://github.com/egzonarifi/mcp-server.git
+git clone https://github.com/EgzonArifi/povio-worklog-mcp.git
 
 # 2. Install dependencies
 npm install

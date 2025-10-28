@@ -79,7 +79,7 @@ Instead of npx, clone and build locally:
 
 ```bash
 # Clone the repository
-git clone https://github.com/egzonarifi/mcp-server.git
+git clone https://github.com/EgzonArifi/povio-worklog-mcp.git
 cd mcp-server
 
 # Install and build
@@ -194,7 +194,7 @@ nvm install --lts
 
 ## Getting Help
 
-- GitHub Issues: https://github.com/egzonarifi/mcp-server/issues
+- GitHub Issues: https://github.com/EgzonArifi/povio-worklog-mcp/issues
 - Check for updates: `npm view povio-worklog-mcp version`
 - Update to latest: Clear cache and restart Cursor (npx auto-updates)
 

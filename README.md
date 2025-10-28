@@ -67,7 +67,7 @@ If you want to contribute or modify the source code:
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/egzonarifi/mcp-server.git
+git clone https://github.com/EgzonArifi/povio-worklog-mcp.git
 cd mcp-server
 ```
 
