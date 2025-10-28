@@ -56,7 +56,7 @@ Trigger examples:
 
 Supported date formats:
 - "today", "yesterday"
-- Specific dates: "2024-10-28" (YYYY-MM-DD), "10/28/2024" (MM/DD/YYYY), "28.10.2024" (DD.MM.YYYY)
+- Specific dates: "2024-10-28" (YYYY-MM-dd), "10/28/2024" (MM/dd/YYYY), "28.10.2024" (dd.MM.YYYY)
 
 Trigger examples:
 - "wl"
@@ -72,7 +72,7 @@ Trigger examples:
         properties: {
           timeframe: {
             type: 'string',
-            description: 'Date format: "today", "yesterday", or specific date like "2024-10-28" (YYYY-MM-DD)',
+            description: 'Date format: "today", "yesterday", or specific date like "2024-10-28" (YYYY-MM-dd)',
           },
           repository: {
             type: 'string',
@@ -119,7 +119,7 @@ Trigger examples:
           },
           date: {
             type: 'string',
-            description: 'Date in YYYY-MM-DD format',
+            description: 'Date in YYYY-MM-dd format',
           },
         },
         required: ['description', 'hours', 'date'],
@@ -131,7 +131,7 @@ Trigger examples:
 
 Supported date formats:
 - "today", "yesterday"
-- Specific dates: "2024-10-28" (YYYY-MM-DD), "10/28/2024" (MM/DD/YYYY), "28.10.2024" (DD.MM.YYYY)
+- Specific dates: "2024-10-28" (YYYY-MM-dd), "10/28/2024" (MM/dd/YYYY), "28.10.2024" (dd.MM.YYYY)
 
 Trigger examples:
 - "wl FaceFlip 8"
@@ -147,7 +147,7 @@ Trigger examples:
         properties: {
           timeframe: {
             type: 'string',
-            description: 'Date format: "today", "yesterday", or specific date like "2024-10-28" (YYYY-MM-DD)',
+            description: 'Date format: "today", "yesterday", or specific date like "2024-10-28" (YYYY-MM-dd)',
           },
           projectId: {
             type: 'number',

@@ -236,7 +236,7 @@ Generate a worklog from git commits.
 **Parameters:**
 - `timeframe` (required): Date format - supports:
   - `"today"`, `"yesterday"`
-  - Specific dates: `"2024-10-28"` (YYYY-MM-DD), `"10/28/2024"` (MM/DD/YYYY), `"28.10.2024"` (DD.MM.YYYY)
+  - Specific dates: `"2024-10-28"` (YYYY-MM-dd), `"10/28/2024"` (MM/dd/YYYY), `"28.10.2024"` (dd.MM.YYYY)
 - `repository` (optional): Path to git repository (defaults to current directory)
 - `enhanceWithAI` (optional): Defaults to `true`. Set to `false` to disable AI enhancement (not recommended)
 
@@ -269,7 +269,7 @@ Post a worklog entry to Povio dashboard.
 - `description` (required): Worklog description
 - `projectName` (required): Project name (e.g., "FaceFlip", "Autobiography")
 - `hours` (required): Number of hours worked
-- `date` (required): Date in YYYY-MM-DD format
+- `date` (required): Date in YYYY-MM-dd format
 
 **Returns:**
 ```
@@ -297,7 +297,7 @@ Combined tool that generates from commits and posts to Povio.
 **Parameters:**
 - `timeframe` (required): Date format - supports:
   - `"today"`, `"yesterday"`
-  - Specific dates: `"2024-10-28"` (YYYY-MM-DD), `"10/28/2024"` (MM/DD/YYYY), `"28.10.2024"` (DD.MM.YYYY)
+  - Specific dates: `"2024-10-28"` (YYYY-MM-dd), `"10/28/2024"` (MM/dd/YYYY), `"28.10.2024"` (dd.MM.YYYY)
 - `projectName` (required): Project name (e.g., "FaceFlip", "Autobiography")
 - `hours` (required): Number of hours worked
 - `repository` (optional): Path to git repository

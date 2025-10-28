@@ -5,11 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2024-10-28
+
+### Changed
+- Updated date format notation to use lowercase `dd` (YYYY-MM-dd, MM/dd/YYYY, dd.MM.YYYY)
+
 ## [1.0.2] - 2024-10-28
 
 ### Changed
 - Updated all date format examples in documentation to use day 28 (Oct 28) for clarity
-- Added format indicators (YYYY-MM-DD, MM/DD/YYYY, DD.MM.YYYY) to make date formats unambiguous
+- Added format indicators (YYYY-MM-dd, MM/dd/YYYY, dd.MM.YYYY) to make date formats unambiguous
 - Improved date examples across README.md, PRESENTATION.md, .cursorrules, and src/index.ts
 
 ## [1.0.1] - 2024-10-28
