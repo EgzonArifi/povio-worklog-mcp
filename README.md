@@ -108,7 +108,9 @@ npm run build
 
 ### Restart Cursor
 
-After adding the configuration, restart Cursor to load the MCP server.
+After adding the configuration, **fully restart Cursor** (Cmd+Q and reopen, not just close the window) to load the MCP server.
+
+> **⚠️ Getting "command not found" error?** See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for quick fixes. Most common solution: `npm cache clean --force` and restart Cursor.
 
 ## Usage in Cursor
 
