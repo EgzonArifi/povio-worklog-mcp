@@ -24,7 +24,7 @@ wl FaceFlip 8  # Done! ✓
 - 📋 **List Projects**: Easily view all your active Povio projects
 - 🏷️ **Use Project Names**: Simply use project names like "FaceFlip" or "Autobiography"
 - 🔍 **Generate Worklog**: Automatically analyze git commits and generate professional worklog descriptions
-- 📅 **Flexible Dates**: Support for "today", "yesterday", and specific dates (e.g., "2024-10-11")
+- 📅 **Flexible Dates**: Support for "today", "yesterday", and specific dates (e.g., "2024-10-28", "Oct 28, 2024")
 - 🤖 **AI Enhancement (Default)**: AI automatically generates optimized, guideline-compliant descriptions from your commits
 - 📤 **Post to Povio**: Post worklogs directly to Povio dashboard
 - ⚡ **Combined Action**: Generate and post in one step
@@ -123,7 +123,7 @@ For faster workflow, use these short patterns:
 ```
 wl                          → Generate worklog for today
 wl yesterday                → Generate worklog for yesterday
-wl 2024-10-10               → Generate worklog for specific date
+wl 2024-10-28               → Generate worklog for specific date (Oct 28)
 wl list                     → List Povio projects
 wl post FaceFlip 8          → Generate and post to FaceFlip, 8 hours
 wl FaceFlip 4               → Generate and post to FaceFlip, 4 hours
@@ -135,7 +135,7 @@ Or use full natural language:
 ```
 "generate worklog for today"
 "generate worklog for yesterday"
-"generate worklog for 2024-10-10"
+"generate worklog for 2024-10-28"
 "post worklog to FaceFlip with 4 hours"
 "list my povio projects"
 ```
@@ -236,7 +236,7 @@ Generate a worklog from git commits.
 **Parameters:**
 - `timeframe` (required): Date format - supports:
   - `"today"`, `"yesterday"`
-  - Specific dates: `"2024-10-11"`, `"10/11/2024"`, `"11.10.2024"`
+  - Specific dates: `"2024-10-28"` (YYYY-MM-DD), `"10/28/2024"` (MM/DD/YYYY), `"28.10.2024"` (DD.MM.YYYY)
 - `repository` (optional): Path to git repository (defaults to current directory)
 - `enhanceWithAI` (optional): Defaults to `true`. Set to `false` to disable AI enhancement (not recommended)
 
@@ -252,7 +252,7 @@ The AI will then analyze the commits and create a superior, client-appropriate w
 **Returns (basic mode - when disabled):**
 ```json
 {
-  "date": "2025-10-09",
+  "date": "2024-10-28",
   "description": "[ENG-155] Implement Screenshot Upload Feature",
   "commits": [
     "8e644dc - ENG-155 Implement Screenshot Upload Feature"
@@ -274,7 +274,7 @@ Post a worklog entry to Povio dashboard.
 **Returns:**
 ```
 ✓ Worklog posted successfully!
-Date: 2025-10-09
+Date: 2024-10-28
 Hours: 4
 Project ID: 15886
 ```
@@ -297,7 +297,7 @@ Combined tool that generates from commits and posts to Povio.
 **Parameters:**
 - `timeframe` (required): Date format - supports:
   - `"today"`, `"yesterday"`
-  - Specific dates: `"2024-10-11"`, `"10/11/2024"`, `"11.10.2024"`
+  - Specific dates: `"2024-10-28"` (YYYY-MM-DD), `"10/28/2024"` (MM/DD/YYYY), `"28.10.2024"` (DD.MM.YYYY)
 - `projectName` (required): Project name (e.g., "FaceFlip", "Autobiography")
 - `hours` (required): Number of hours worked
 - `repository` (optional): Path to git repository

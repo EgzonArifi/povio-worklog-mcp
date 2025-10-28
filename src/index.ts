@@ -56,23 +56,23 @@ Trigger examples:
 
 Supported date formats:
 - "today", "yesterday"
-- Specific dates: "2024-10-11", "10/11/2024", "11.10.2024"
+- Specific dates: "2024-10-28" (YYYY-MM-DD), "10/28/2024" (MM/DD/YYYY), "28.10.2024" (DD.MM.YYYY)
 
 Trigger examples:
 - "wl"
 - "wl today"
 - "wl yesterday"
-- "wl 2024-10-10"
+- "wl 2024-10-28"
 - "generate worklog"
 - "generate worklog for yesterday"
-- "generate worklog for 2024-10-10"
+- "generate worklog for 2024-10-28"
 - "what did I work on yesterday"`,
       inputSchema: {
         type: 'object',
         properties: {
           timeframe: {
             type: 'string',
-            description: 'Date format: "today", "yesterday", or specific date like "2024-10-11"',
+            description: 'Date format: "today", "yesterday", or specific date like "2024-10-28" (YYYY-MM-DD)',
           },
           repository: {
             type: 'string',
@@ -131,13 +131,13 @@ Trigger examples:
 
 Supported date formats:
 - "today", "yesterday"
-- Specific dates: "2024-10-11", "10/11/2024", "11.10.2024"
+- Specific dates: "2024-10-28" (YYYY-MM-DD), "10/28/2024" (MM/DD/YYYY), "28.10.2024" (DD.MM.YYYY)
 
 Trigger examples:
 - "wl FaceFlip 8"
 - "wl Autobiography 4"
 - "wl yesterday FaceFlip 6"
-- "wl 2024-10-10 FaceFlip 8"
+- "wl 2024-10-28 FaceFlip 8"
 - "generate and post worklog for today with 8 hours"
 - "generate and post to FaceFlip, 5 hours"
 - "create and submit worklog to Autobiography for 3 hours"
@@ -147,7 +147,7 @@ Trigger examples:
         properties: {
           timeframe: {
             type: 'string',
-            description: 'Date format: "today", "yesterday", or specific date like "2024-10-11"',
+            description: 'Date format: "today", "yesterday", or specific date like "2024-10-28" (YYYY-MM-DD)',
           },
           projectId: {
             type: 'number',
