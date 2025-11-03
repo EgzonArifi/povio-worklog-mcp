@@ -1,8 +1,17 @@
-# Povio Worklog MCP Server
+<p align="center">
+<div align="center">
+  <img src="resources/povio-mcp-server.png" width="50%" alt="Povio Worklog MCP Server" />
+</div>
+</p>
+<div align="center">
 
 [![npm version](https://badge.fury.io/js/povio-worklog-mcp.svg)](https://www.npmjs.com/package/povio-worklog-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
+
+</div>
+
+# Povio Worklog MCP Server
 
 A Model Context Protocol (MCP) server that provides automated worklog generation from git commits with AI enhancement and seamless Povio dashboard integration.
 
