@@ -55,7 +55,7 @@ No need to clone! Just add the configuration to Cursor:
       "command": "npx",
       "args": ["-y", "povio-worklog-mcp"],
       "env": {
-        "POVIO_API_TOKEN": "your-povio-cookie-token"
+        "POVIO_API_TOKEN": "your-povio-token-value"
       }
     }
   }
@@ -65,7 +65,8 @@ No need to clone! Just add the configuration to Cursor:
 **That's it!** The package will be automatically downloaded and run via npx.
 
 **Configuration Details:**
-- **POVIO_API_TOKEN:** Your Povio dashboard cookie in format `_poviolabs_dashboard=VALUE` (see [Getting Your Token](#getting-your-povio-api-token) below for detailed instructions)
+- **POVIO_API_TOKEN:** Your Povio dashboard cookie token value (see [Getting Your Token](#getting-your-povio-api-token) below for detailed instructions)
+  - Just provide the token value - the `_poviolabs_dashboard=` prefix is automatically added
 - **Note:** The tool uses the current working directory of your Cursor workspace as the git repository
 - **Updates:** npx automatically uses the latest version on each run
 
@@ -103,7 +104,7 @@ npm run build
       "command": "node",
       "args": ["/absolute/path/to/mcp-server/dist/index.js"],
       "env": {
-        "POVIO_API_TOKEN": "your-povio-cookie-token"
+        "POVIO_API_TOKEN": "your-povio-token-value"
       }
     }
   }
@@ -383,11 +384,7 @@ The tool automatically formats your commits to follow these guidelines. With **A
 
 ## Getting Your Povio API Token
 
-The `POVIO_API_TOKEN` must include **both the cookie name and its value** in this exact format:
-
-```
-_poviolabs_dashboard=YOUR_COOKIE_VALUE_HERE
-```
+The `POVIO_API_TOKEN` should be set to **just the cookie token value**. The `_poviolabs_dashboard=` prefix is automatically added by the server.
 
 ### Step-by-Step Instructions:
 
@@ -402,14 +399,15 @@ _poviolabs_dashboard=YOUR_COOKIE_VALUE_HERE
 
 4. **Find the cookie** named `_poviolabs_dashboard`
 
-5. **Copy the ENTIRE cookie** in this format:
+5. **Copy just the cookie value** (the part after `_poviolabs_dashboard=`):
    ```
-   _poviolabs_dashboard=s%3Aabcd1234...xyz
+   s%3Aabcd1234...xyz
    ```
    
    ⚠️ **Important**: 
-   - Include `_poviolabs_dashboard=` at the start
-   - Copy the complete value (it's usually very long, 300-500 characters)
+   - Copy **only the value** (the part after the `=` sign)
+   - Do NOT include `_poviolabs_dashboard=` - it's added automatically
+   - The value is usually very long (300-500 characters)
    - Don't add quotes around it in the config
 
 6. **Add to your Cursor MCP configuration** (`~/.cursor/mcp.json`):
@@ -421,7 +419,7 @@ _poviolabs_dashboard=YOUR_COOKIE_VALUE_HERE
       "command": "npx",
       "args": ["-y", "povio-worklog-mcp"],
       "env": {
-        "POVIO_API_TOKEN": "_poviolabs_dashboard=s%3Aabcd1234...your-actual-cookie-value"
+        "POVIO_API_TOKEN": "s%3Aabcd1234...your-actual-cookie-value"
       }
     }
   }
@@ -431,14 +429,14 @@ _poviolabs_dashboard=YOUR_COOKIE_VALUE_HERE
 ### Example (shortened for display):
 
 ```json
-"POVIO_API_TOKEN": "_poviolabs_dashboard=s%3AY1lndE1GK256eTZzZmd0L2s5ODc2djdqaTdrL2VaZFlFS2..."
+"POVIO_API_TOKEN": "s%3AY1lndE1GK256eTZzZmd0L2s5ODc2djdqaTdrL2VaZFlFS2..."
 ```
 
 ### Troubleshooting:
 
-- ❌ **Wrong**: `"your-povio-cookie-token"` (placeholder text)
-- ❌ **Wrong**: `"s%3Aabcd1234..."` (missing cookie name)
-- ✅ **Correct**: `"_poviolabs_dashboard=s%3Aabcd1234..."`
+- ❌ **Wrong**: `"your-povio-token-value"` (placeholder text)
+- ❌ **Wrong**: `"_poviolabs_dashboard=s%3Aabcd1234..."` (includes prefix - will still work but unnecessary)
+- ✅ **Correct**: `"s%3Aabcd1234..."` (just the token value)
 
 ## Your Projects
 

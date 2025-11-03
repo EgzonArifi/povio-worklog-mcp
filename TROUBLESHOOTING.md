@@ -109,15 +109,16 @@ Then update your `~/.cursor/mcp.json`:
 
 If posting to Povio fails with authentication errors:
 
-1. Check your token format - it should include the cookie name:
+1. Check your token format - provide just the cookie value:
    ```
-   _poviolabs_dashboard=s%3A...
+   s%3A...
    ```
+   (The `_poviolabs_dashboard=` prefix is automatically added)
 
 2. Get a fresh token from [Povio Dashboard](https://app.povio.com):
    - Open DevTools (F12)
    - Go to Application/Storage → Cookies
-   - Copy the entire `_poviolabs_dashboard` cookie value
+   - Copy **only the value** of `_poviolabs_dashboard` cookie (the part after `=`)
 
 3. Make sure there are no extra quotes or spaces in the token
 
