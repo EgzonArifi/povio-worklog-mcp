@@ -713,7 +713,7 @@ Add to `~/.cursor/mcp.json`:
       "command": "npx",
       "args": ["-y", "povio-worklog-mcp"],
       "env": {
-        "POVIO_API_TOKEN": "_poviolabs_dashboard=YOUR_TOKEN"
+        "POVIO_API_TOKEN": "YOUR_TOKEN"
       }
     }
   }
@@ -730,13 +730,13 @@ Add to `~/.cursor/mcp.json`:
 2. Open DevTools (F12)
 3. Go to Application → Cookies
 4. Find `_poviolabs_dashboard`
-5. Copy the **entire** cookie:
+5. Copy **just the cookie value** (the part after `=`):
 
 ```
-_poviolabs_dashboard=s%3AY1lndE1GK256eTZzZmd0L2s5ODc...
+s%3AY1lndE1GK256eTZzZmd0L2s5ODc...
 ```
 
-⚠️ **Important**: Include the cookie name + value!
+⚠️ **Important**: Copy only the value - the `_poviolabs_dashboard=` prefix is automatically added!
 
 ---
 

@@ -8,9 +8,15 @@ export class PovioService {
 
   constructor(apiToken?: string) {
     this.apiToken = apiToken || process.env.POVIO_API_TOKEN || '';
-    
+
     if (!this.apiToken) {
       throw new Error('POVIO_API_TOKEN not configured. Set it in environment variables.');
+    }
+
+    // Always prefix the token with the cookie name if not already prefixed
+    // Users should provide just the token value, we add _poviolabs_dashboard= automatically
+    if (!this.apiToken.startsWith('_poviolabs_dashboard=')) {
+      this.apiToken = `_poviolabs_dashboard=${this.apiToken}`;
     }
   }
 
