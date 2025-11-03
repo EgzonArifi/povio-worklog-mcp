@@ -51,7 +51,9 @@ export class PovioService {
 
       if (!response.ok) {
         const responseText = await response.text();
-        throw new Error(`Povio API error: ${response.status} ${response.statusText}\nResponse: ${responseText}`);
+        // Sanitize response to prevent token leakage
+        const sanitizedResponse = this.sanitizeErrorResponse(responseText);
+        throw new Error(`Povio API error: ${response.status} ${response.statusText}\nResponse: ${sanitizedResponse}`);
       }
 
       const projectInfo = `Project ID: ${request.projectId}`;
@@ -218,6 +220,27 @@ export class PovioService {
     }
 
     throw new Error(`Project "${projectName}" not found. Use list_povio_projects tool to see available projects.`);
+  }
+
+  /**
+   * Sanitize error response to prevent token leakage
+   * Removes any potential cookie/token values from error messages
+   */
+  private sanitizeErrorResponse(responseText: string): string {
+    let sanitized = responseText;
+    
+    // Remove potential cookie patterns
+    sanitized = sanitized.replace(/_poviolabs_dashboard=[^;,\s"]*/gi, '_poviolabs_dashboard=[REDACTED]');
+    
+    // Remove any long strings that might be tokens (300+ chars, base64-like)
+    sanitized = sanitized.replace(/[A-Za-z0-9+/=%]{300,}/g, '[REDACTED_TOKEN]');
+    
+    // Limit response length to prevent excessive data exposure
+    if (sanitized.length > 500) {
+      sanitized = sanitized.substring(0, 500) + '...[truncated]';
+    }
+    
+    return sanitized;
   }
 
   /**

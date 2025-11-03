@@ -5,6 +5,8 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { generateWorklog } from './tools/generate.js';
@@ -27,6 +29,9 @@ const server = new Server(
   {
     capabilities: {
       tools: {},
+      prompts: {
+        listChanged: true,
+      },
     },
   }
 );
@@ -295,6 +300,102 @@ ${result.generated.description}`,
       isError: true,
     };
   }
+});
+
+// Register available prompts
+server.setRequestHandler(ListPromptsRequestSchema, async () => ({
+  prompts: [
+    {
+      name: 'wl',
+      title: 'Generate Worklog',
+      description: 'Quick worklog generation from git commits. Generate for today, yesterday, or a specific date. Optionally specify project and hours to generate and post in one step.',
+      arguments: [
+        {
+          name: 'timeframe',
+          description: 'Date: "today", "yesterday", or specific date (YYYY-MM-dd, MM/dd/YYYY, or dd.MM.YYYY)',
+          required: false,
+        },
+        {
+          name: 'project',
+          description: 'Project name (e.g., "FaceFlip", "Autobiography") or ID. If provided with hours, will generate and post worklog.',
+          required: false,
+        },
+        {
+          name: 'hours',
+          description: 'Number of hours worked. Required if posting to Povio (when project is specified).',
+          required: false,
+        },
+      ],
+    },
+  ],
+}));
+
+// Handle prompt retrieval requests
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+
+  if (name === 'wl') {
+    const timeframe = (args?.timeframe as string) || 'today';
+    const project = args?.project as string | undefined;
+    const hours = args?.hours as number | undefined;
+
+    // If project and hours are provided, generate and post
+    if (project && hours) {
+      return {
+        description: 'Generate and post worklog to Povio',
+        messages: [
+          {
+            role: 'user',
+            content: {
+              type: 'text',
+              text: `Please generate a worklog from git commits for ${timeframe} and post it to Povio project "${project}" with ${hours} hours worked.
+
+Call the generate_and_post_worklog tool with:
+- timeframe: "${timeframe}"
+- projectName: "${project}"
+- hours: ${hours}`,
+            },
+          },
+        ],
+      };
+    }
+
+    // If only project is provided (without hours), just generate but mention the project
+    if (project) {
+      return {
+        description: 'Generate worklog from git commits',
+        messages: [
+          {
+            role: 'user',
+            content: {
+              type: 'text',
+              text: `Please generate a worklog from git commits for ${timeframe} (project: ${project}).
+
+Call the generate_worklog tool with timeframe: "${timeframe}". After reviewing the generated worklog, you can post it using the post_worklog tool with the project name "${project}" and the hours worked.`,
+            },
+          },
+        ],
+      };
+    }
+
+    // If only timeframe (or nothing), just generate
+    return {
+      description: 'Generate worklog from git commits',
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `Please generate a worklog from git commits for ${timeframe}.
+
+Call the generate_worklog tool with timeframe: "${timeframe}". The tool will analyze your git commits, extract ticket numbers, and create a professional worklog description.`,
+          },
+        },
+      ],
+    };
+  }
+
+  throw new Error(`Unknown prompt: ${name}`);
 });
 
 // Start the server
