@@ -44,20 +44,20 @@
 **Created by:** Anthropic  
 **Purpose:** Standardize how AI connects to data sources, tools, and workflows
 
-### What Can MCP Enable?
-
-Real-world examples from the MCP ecosystem:
-
-- 🗓️ **Personal AI**: Claude accesses your Google Calendar and Notion
-- 🎨 **Design to Code**: Cursor generates apps from Figma designs
-- 📊 **Enterprise**: AI chatbots query multiple databases across your organization
-
 ### Think of MCP as...
 
 - **USB-C** → for connecting devices
 - **REST API** → for web services
 - **GraphQL** → for data queries
 - **MCP** → for connecting AI to external systems
+
+### What Can MCP Enable?
+
+Real-world examples from the MCP ecosystem:
+
+- 🎨 **Design to Code**: Cursor generates apps from Figma designs
+- 🗓️ **Personal AI**: Claude accesses your Google Calendar and Notion
+- 🤖 **Task managment**: Cursor creates/updates your tasks in Linear
 
 ## 🎯 Why MCP Matters
 
