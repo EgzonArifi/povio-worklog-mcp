@@ -1,11 +1,12 @@
 {
   "name": "povio-worklog-mcp",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "description": "Model Context Protocol (MCP) server for automated worklog generation from git commits with AI enhancement and Povio dashboard integration",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "povio-worklog-mcp": "dist/index.js"
+    "povio-worklog-mcp": "dist/index.js",
+    "povio-worklog": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",

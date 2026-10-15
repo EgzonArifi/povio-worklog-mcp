@@ -475,6 +475,52 @@ node dist/index.js
 
 Then send JSON-RPC messages via stdin.
 
+## Run Unattended in Claude Routines (Cloud)
+
+The MCP server reads commits from the repo you are working in. For a scheduled run that does not need your Mac (a [Claude routine](https://code.claude.com/docs/en/routines)), use the `povio-worklog` CLI. It reads your commits from GitHub through `gh api` (no clone) and posts to Povio with the same code as the MCP tools. Local MCP usage is unchanged.
+
+### CLI
+
+```bash
+# Commits for yesterday across one or more repos (all branches updated that day)
+povio-worklog commits --repos owner/repo-a,owner/repo-b --date yesterday
+
+# Post a finished description
+povio-worklog post --project "FaceFlip" --hours 8 --date 2026-10-14 --description "[ONE-79] ..."
+```
+
+- `--date`: `today`, `yesterday`, `last-workday` (yesterday, but Friday on Sunday/Monday), `YYYY-MM-dd`, `MM/dd/YYYY`, `dd.MM.YYYY`
+- `commits` prints the same Povio enhancement prompt as the MCP tool plus the commit data (`--json` for data only). When a day has no commits it says so and tells you not to post.
+- `post --dry-run` prints what would be posted. Use `--description -` to read the text from stdin, `--project-id` instead of `--project` if you prefer.
+- Exit code is non-zero when posting fails or every repo could not be read.
+
+### Environment
+
+| Variable | Purpose |
+|----------|---------|
+| `POVIO_API_TOKEN` | Povio token (same as the MCP config) |
+| `WORKLOG_GITHUB_USER` | Your GitHub login, used as the commit author filter (falls back to `gh api user`) |
+| `WORKLOG_TIMEZONE` | e.g. `Europe/Belgrade`. Cloud VMs run in UTC, so day boundaries need this |
+
+### Routine setup
+
+1. In the routine's cloud environment, set the variables above and allow `app.povio.com` under **Custom** network access (keep "include default list" checked). No GitHub token is needed.
+2. Attach any repo you can read to the routine (it is only used to start the session).
+3. Use a prompt like this, one routine per project and hours combination:
+
+```text
+Create my Povio worklog for the last workday.
+
+1. For each repo below, call the add_repo tool with read access (do not clone):
+   one-lucky-dog/one-lucky-dog-monorepo, waybacklabs/faceflip
+2. Run: npx -y -p povio-worklog-mcp povio-worklog commits --repos <the repos, comma separated> --date last-workday
+3. If it reports no commits or an ERROR, stop and do not post anything.
+4. Otherwise write the description following the guidelines in the output, keeping the [TICKET] format.
+5. Run: npx -y -p povio-worklog-mcp povio-worklog post --project "<Povio project>" --hours 8 --date <the date printed by commits> --description "<description>"
+```
+
+Repos are read through the session's GitHub access, so `add_repo` is required for each repo before `commits` runs. If it fails, the CLI prints the GitHub error for that repo.
+
 ## Troubleshooting
 
 ### Server Not Starting

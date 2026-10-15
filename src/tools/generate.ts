@@ -3,36 +3,72 @@ import { WorklogFormatter } from '../services/formatter.js';
 import { DateParser } from '../services/dateParser.js';
 import { GenerateWorklogArgs, WorklogData } from '../types/index.js';
 
+import { resolve } from 'path';
+
 export async function generateWorklog(args: GenerateWorklogArgs): Promise<WorklogData> {
-  const gitService = new GitService(args.repository);
-  
-  // Parse the timeframe into a date
-  const parsedDate = DateParser.parse(args.timeframe);
-  
-  // Get commits for the parsed date
-  const commits = await gitService.getCommitsForDate(parsedDate.date);
-  
-  // Format date as YYYY-MM-DD (using local timezone to avoid timezone shifts)
-  const year = parsedDate.date.getFullYear();
-  const month = String(parsedDate.date.getMonth() + 1).padStart(2, '0');
-  const day = String(parsedDate.date.getDate()).padStart(2, '0');
-  const dateString = `${year}-${month}-${day}`;
-  
-  // Format into worklog
-  const worklog = WorklogFormatter.formatWorklog(commits, dateString);
-  
-  // AI enhancement is enabled by default (can be disabled with enhanceWithAI: false)
-  const shouldEnhance = args.enhanceWithAI !== false;
-  
-  if (shouldEnhance) {
-    worklog.rawCommits = commits;
-    worklog.aiEnhancementPrompt = generateAIEnhancementPrompt(commits, worklog.ticketNumbers, parsedDate.displayName);
+  try {
+    // Use provided repository path or try to detect it
+    // Resolve to absolute path to avoid issues with relative paths
+    const repositoryPath = args.repository 
+      ? resolve(args.repository) 
+      : process.cwd();
+    
+    console.error('[DEBUG] generateWorklog called');
+    console.error(`[DEBUG] Repository path: ${repositoryPath}`);
+    console.error(`[DEBUG] Timeframe: "${args.timeframe}"`);
+    
+    const gitService = new GitService(repositoryPath);
+    
+    // Parse the timeframe into a date
+    const parsedDate = DateParser.parse(args.timeframe);
+    console.error(`[DEBUG] Parsed date: ${parsedDate.date.toISOString()} (local: ${parsedDate.date.getFullYear()}-${String(parsedDate.date.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.date.getDate()).padStart(2, '0')})`);
+    console.error(`[DEBUG] Display name: "${parsedDate.displayName}"`);
+    
+    // Get commits for the parsed date
+    console.error('[DEBUG] Fetching commits for date...');
+    const commits = await gitService.getCommitsForDate(parsedDate.date);
+    console.error(`[DEBUG] Retrieved ${commits.length} commits`);
+    
+    // Format date as YYYY-MM-DD (using local timezone to avoid timezone shifts)
+    const year = parsedDate.date.getFullYear();
+    const month = String(parsedDate.date.getMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    
+    // Format into worklog
+    const worklog = WorklogFormatter.formatWorklog(commits, dateString);
+    console.error(`[DEBUG] Worklog formatted: ${worklog.description.substring(0, 100)}...`);
+    
+    // AI enhancement is enabled by default (can be disabled with enhanceWithAI: false)
+    const shouldEnhance = args.enhanceWithAI !== false;
+    
+    if (shouldEnhance) {
+      worklog.rawCommits = commits;
+      worklog.aiEnhancementPrompt = generateAIEnhancementPrompt(commits, worklog.ticketNumbers, parsedDate.displayName);
+    }
+    
+    return worklog;
+  } catch (error) {
+    // Log error to stderr for debugging (won't appear in MCP response)
+    console.error('Error in generateWorklog:', error);
+    
+    // Return a helpful error message
+    const parsedDate = DateParser.parse(args.timeframe);
+    const year = parsedDate.date.getFullYear();
+    const month = String(parsedDate.date.getMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    
+    return {
+      date: dateString,
+      description: `Error generating worklog: ${error instanceof Error ? error.message : 'Unknown error'}. Please check that the repository path is correct and git is accessible.`,
+      commits: [],
+      ticketNumbers: [],
+    };
   }
-  
-  return worklog;
 }
 
-function generateAIEnhancementPrompt(commits: any[], ticketNumbers: string[], displayName: string): string {
+export function generateAIEnhancementPrompt(commits: any[], ticketNumbers: string[], displayName: string): string {
   const commitDetails = commits.map(c => {
     let detail = `- ${c.hash}: ${c.message} (${c.type})`;
     // Include commit body if present for richer context
