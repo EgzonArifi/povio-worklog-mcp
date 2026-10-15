@@ -35,6 +35,15 @@ export interface PovioWorklogResponse {
   message: string;
 }
 
+export interface PovioTimeLogEntry {
+  id: number;
+  date: string; // YYYY-MM-dd
+  projectId: number;
+  projectName: string;
+  hours: string; // as shown by Povio, e.g. "8h"
+  description: string;
+}
+
 export interface GenerateWorklogArgs {
   timeframe: string; // "today", "yesterday", or specific date like "2024-10-11"
   repository?: string;

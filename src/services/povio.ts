@@ -1,4 +1,4 @@
-import { PovioWorklogRequest, PovioWorklogResponse, PovioProjectsResponse, PovioProject, PovioAvailableProject } from '../types/index.js';
+import { PovioWorklogRequest, PovioWorklogResponse, PovioProjectsResponse, PovioProject, PovioAvailableProject, PovioTimeLogEntry } from '../types/index.js';
 
 export class PovioService {
   private apiToken: string;
@@ -74,6 +74,73 @@ export class PovioService {
         message: `✗ Failed to post worklog: ${error instanceof Error ? error.message : 'Unknown error'}`,
       };
     }
+  }
+
+  /**
+   * Fetch the user's existing worklog entries for a given day, optionally for one project.
+   * Reads the week containing the date and filters by each entry's own date.
+   */
+  async fetchTimeLogs(date: string, projectId?: number): Promise<PovioTimeLogEntry[]> {
+    const queryString = new URLSearchParams({
+      'filters[daterange_start]': this.getWeekStart(new Date(date)),
+      'filters[daterange_end]': this.getWeekEnd(new Date(date)),
+      'filters[project_id]': '',
+      'filters[group]': 'day',
+    }).toString();
+
+    const response = await fetch(`${this.apiUrl}?${queryString}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Cookie': this.apiToken,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch existing worklogs: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return PovioService.parseTimeLogs(data).filter(
+      entry => entry.date === date && (projectId === undefined || entry.projectId === projectId)
+    );
+  }
+
+  /**
+   * Flatten Povio's day-grouped time log response into entries.
+   * Descriptions come back HTML-escaped, so they are unescaped here.
+   */
+  static parseTimeLogs(data: any): PovioTimeLogEntry[] {
+    const entries: PovioTimeLogEntry[] = [];
+    if (!data || !Array.isArray(data.records)) {
+      throw new Error('Unexpected worklog response from Povio (no records array)');
+    }
+    for (const group of data.records) {
+      for (const child of group?.children ?? []) {
+        const date = child?.end_date?.value;
+        const projectId = Number(child?.project?.value);
+        if (typeof date !== 'string' || !Number.isFinite(projectId)) continue;
+        entries.push({
+          id: Number(child.id),
+          date,
+          projectId,
+          projectName: String(child.project?.text ?? ''),
+          hours: String(child.estimate?.value ?? ''),
+          description: PovioService.unescapeHtml(String(child.description?.value ?? '')),
+        });
+      }
+    }
+    return entries;
+  }
+
+  private static unescapeHtml(text: string): string {
+    return text
+      .replace(/&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&');
   }
 
   /**

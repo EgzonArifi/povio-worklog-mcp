@@ -398,18 +398,39 @@ Call the generate_worklog tool with timeframe: "${timeframe}". The tool will ana
   throw new Error(`Unknown prompt: ${name}`);
 });
 
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit - let the server continue running
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Don't exit immediately - log and let server try to continue
+});
+
 // Start the server
 async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  
-  // Log to stderr (stdout is reserved for MCP protocol)
-  console.error('Worklog MCP Server running on stdio');
+  try {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    
+    // Log to stderr (stdout is reserved for MCP protocol)
+    console.error('Worklog MCP Server running on stdio');
+  } catch (error) {
+    console.error('Error during server initialization:', error);
+    // Re-throw to be caught by main().catch()
+    throw error;
+  }
 }
 
 main().catch((error) => {
   console.error('Fatal error in main():', error);
-  process.exit(1);
+  // Use setTimeout to ensure error is logged before exit
+  setTimeout(() => {
+    process.exit(1);
+  }, 100);
 });
 
 

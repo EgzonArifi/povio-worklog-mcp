@@ -181,6 +181,98 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 nvm install --lts
 ```
 
+### Error: "calling 'initialize': EOF" in Antigravity
+
+If you're getting an EOF (End of File) error during initialization in Antigravity but it works in Cursor:
+
+**This issue has been addressed in version 1.0.8+** with improved error handling. Try these steps:
+
+1. **Update to the latest version:**
+   ```bash
+   npm cache clean --force
+   rm -rf ~/.npm/_npx
+   ```
+   Then restart Antigravity (npx will auto-update on next run)
+
+2. **Use local installation instead of npx:**
+   Some MCP clients handle local installations more reliably:
+   ```bash
+   # Clone and build locally
+   git clone https://github.com/EgzonArifi/povio-worklog-mcp.git
+   cd mcp-server
+   npm install
+   npm run build
+   ```
+   
+   Then update your Antigravity MCP configuration to use the local path:
+   ```json
+   {
+     "mcpServers": {
+       "povio-worklog": {
+         "command": "node",
+         "args": ["/absolute/path/to/mcp-server/dist/index.js"],
+         "env": {
+           "POVIO_API_TOKEN": "your-token-here"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Check Antigravity logs:**
+   - Look for any error messages before the EOF error
+   - Verify that Node.js is accessible from Antigravity's environment
+   - Ensure the PATH includes Node.js binaries
+
+4. **Verify the server starts correctly:**
+   ```bash
+   # Test the server manually
+   node /path/to/mcp-server/dist/index.js
+   ```
+   The server should start and wait for input (you can press Ctrl+C to exit)
+
+**Note:** The EOF error typically indicates the connection closed before the initialization handshake completed. The improved error handling in v1.0.8+ should prevent premature exits.
+
+### No Commits Found (Timezone Issue)
+
+If you're getting "No commits found" for today, yesterday, or specific dates, especially when using Antigravity:
+
+**This issue has been fixed in version 1.0.8+** with timezone-aware date comparisons.
+
+**The Problem:**
+- Git returns commit dates in UTC (ISO format)
+- Date comparisons were using local timezone
+- This caused commits to be filtered out incorrectly, especially for dates near timezone boundaries
+
+**The Fix:**
+- Date comparisons now use date-only matching (year/month/day)
+- This works correctly regardless of timezone differences
+- Commits are now correctly matched to their authored date
+
+**If you're still experiencing issues after updating:**
+
+1. **Clear cache and update:**
+   ```bash
+   npm cache clean --force
+   rm -rf ~/.npm/_npx
+   ```
+   Then restart your MCP client
+
+2. **Verify commits exist:**
+   ```bash
+   # Check commits for today
+   git log --since="today" --oneline --all
+   
+   # Check commits for yesterday
+   git log --since="yesterday" --until="today" --oneline --all
+   
+   # Check your git user email (commits are filtered by author)
+   git config user.email
+   ```
+
+3. **Test with a specific date:**
+   Try using a specific date format like `2025-11-19` instead of "today" or "yesterday"
+
 ## Still Having Issues?
 
 1. **Test manually first**: Run `npx -y povio-worklog-mcp` in your terminal to isolate if it's a Cursor issue
