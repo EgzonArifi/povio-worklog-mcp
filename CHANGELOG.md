@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-10-15
+
+### Added
+- `povio-worklog post` now checks Povio for an existing worklog on the same project and day and skips (exit 0) instead of posting a duplicate. `--force` posts anyway. If the check itself fails, nothing is posted.
+- `povio-worklog logs [--date] [--project]` shows existing worklog entries.
+- `PovioService.fetchTimeLogs` reads existing entries from Povio.
+
 ## [1.1.0] - 2026-10-15
 
 ### Added

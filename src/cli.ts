@@ -23,12 +23,16 @@ import { GitHubService } from './services/github.js';
 import { WorklogFormatter } from './services/formatter.js';
 import { generateAIEnhancementPrompt } from './tools/generate.js';
 import { postWorklog } from './tools/post.js';
+import { PovioService } from './services/povio.js';
 import { ParsedCommit } from './types/index.js';
 
 const USAGE = `Usage:
   povio-worklog commits --repos <owner/name,...> [--date <date>] [--user <github-login>] [--json]
   povio-worklog post --project <name> | --project-id <id> --hours <n> --date <YYYY-MM-dd>
-                     --description <text | -> [--dry-run]
+                     --description <text | -> [--dry-run] [--force]
+  povio-worklog logs [--date <date>] [--project <name> | --project-id <id>]
+
+post skips (exit 0) when a worklog already exists for that project and day; --force posts anyway.
 
 Dates: today, yesterday, last-workday, YYYY-MM-dd, MM/dd/YYYY, dd.MM.YYYY (default: yesterday)
 Environment: WORKLOG_TIMEZONE (e.g. Europe/Belgrade), WORKLOG_GITHUB_USER, POVIO_API_TOKEN, DEFAULT_PROJECT_ID`;
@@ -197,9 +201,49 @@ async function runPost(flags: Flags): Promise<number> {
     return 0;
   }
 
+  // Unless --force is given, never add a second entry for the same project and day.
+  // If the check itself fails we stop rather than risk a duplicate.
+  if (!flags.force) {
+    const povio = new PovioService();
+    const resolvedId = await resolveProjectId(povio, projectName, projectId);
+    const existing = await povio.fetchTimeLogs(date, resolvedId);
+    if (existing.length > 0) {
+      console.log(`SKIPPED: a worklog already exists for ${date} on project ${existing[0].projectName || resolvedId}. Nothing was posted.`);
+      for (const entry of existing) {
+        console.log(`- ${entry.hours} (entry ${entry.id}): ${entry.description}`);
+      }
+      return 0;
+    }
+    const result = await postWorklog({ description, projectId: resolvedId, hours, date });
+    console.log(result.message);
+    return result.success ? 0 : 1;
+  }
+
   const result = await postWorklog({ description, projectName, projectId, hours, date });
   console.log(result.message);
   return result.success ? 0 : 1;
+}
+
+async function resolveProjectId(povio: PovioService, projectName?: string, projectId?: number): Promise<number> {
+  if (projectName) return povio.resolveProjectId(projectName);
+  const id = projectId ?? parseInt(process.env.DEFAULT_PROJECT_ID || '0');
+  if (!id) throw new Error('No project given: use --project, --project-id or set DEFAULT_PROJECT_ID');
+  return id;
+}
+
+async function runLogs(flags: Flags): Promise<number> {
+  const parsedDate = resolveDate(str(flags, 'date') ?? 'today');
+  const date = formatLocalDate(parsedDate.date);
+  const povio = new PovioService();
+  const projectName = str(flags, 'project');
+  const projectIdRaw = str(flags, 'project-id');
+  const projectId = projectName || projectIdRaw
+    ? await resolveProjectId(povio, projectName, projectIdRaw ? Number(projectIdRaw) : undefined)
+    : undefined;
+
+  const entries = await povio.fetchTimeLogs(date, projectId);
+  console.log(JSON.stringify({ date, count: entries.length, entries }, null, 2));
+  return 0;
 }
 
 async function main(): Promise<number> {
@@ -213,6 +257,8 @@ async function main(): Promise<number> {
       return runCommits(flags);
     case 'post':
       return runPost(flags);
+    case 'logs':
+      return runLogs(flags);
     default:
       throw new Error(`Unknown command: ${command}\n\n${USAGE}`);
   }

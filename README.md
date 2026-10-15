@@ -491,7 +491,9 @@ povio-worklog post --project "FaceFlip" --hours 8 --date 2026-10-14 --descriptio
 
 - `--date`: `today`, `yesterday`, `last-workday` (yesterday, but Friday on Sunday/Monday), `YYYY-MM-dd`, `MM/dd/YYYY`, `dd.MM.YYYY`
 - `commits` prints the same Povio enhancement prompt as the MCP tool plus the commit data (`--json` for data only). When a day has no commits it says so and tells you not to post.
+- `post` first checks Povio for an existing worklog on the same project and day and skips it (exit 0) rather than posting a duplicate; `--force` posts anyway. If that check fails, nothing is posted.
 - `post --dry-run` prints what would be posted. Use `--description -` to read the text from stdin, `--project-id` instead of `--project` if you prefer.
+- `logs --date today --project "FaceFlip"` lists existing entries.
 - Exit code is non-zero when posting fails or every repo could not be read.
 
 ### Environment
@@ -509,14 +511,14 @@ povio-worklog post --project "FaceFlip" --hours 8 --date 2026-10-14 --descriptio
 3. Use a prompt like this, one routine per project and hours combination:
 
 ```text
-Create my Povio worklog for the last workday.
+Create my Povio worklog for today.
 
 1. For each repo below, call the add_repo tool with read access (do not clone):
    one-lucky-dog/one-lucky-dog-monorepo, waybacklabs/faceflip
-2. Run: npx -y -p povio-worklog-mcp povio-worklog commits --repos <the repos, comma separated> --date last-workday
+2. Run: npx -y -p 'povio-worklog-mcp@^1.2.0' povio-worklog commits --repos <the repos, comma separated> --date today
 3. If it reports no commits or an ERROR, stop and do not post anything.
 4. Otherwise write the description following the guidelines in the output, keeping the [TICKET] format.
-5. Run: npx -y -p povio-worklog-mcp povio-worklog post --project "<Povio project>" --hours 8 --date <the date printed by commits> --description "<description>"
+5. Run: npx -y -p 'povio-worklog-mcp@^1.2.0' povio-worklog post --project "<Povio project>" --hours 8 --date <the date printed by commits> --description "<description>"
 ```
 
 Repos are read through the session's GitHub access, so `add_repo` is required for each repo before `commits` runs. If it fails, the CLI prints the GitHub error for that repo.
