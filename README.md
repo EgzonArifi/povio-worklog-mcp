@@ -507,21 +507,25 @@ povio-worklog post --project "FaceFlip" --hours 8 --date 2026-10-14 --descriptio
 ### Routine setup
 
 1. In the routine's cloud environment, set the variables above and allow `app.povio.com` under **Custom** network access (keep "include default list" checked). No GitHub token is needed.
-2. Attach any repo you can read to the routine (it is only used to start the session).
-3. Use a prompt like this, one routine per project and hours combination:
+2. Attach at least one repo you can read to the routine. It is not used for anything else, but without an attached repo the session has no `add_repo` tool. Attach a repo other than this package's own: if the working directory is this package, `npx` cannot find the `povio-worklog` command, so the prompt below runs every `npx` from `/tmp`.
+3. Use a prompt like this, one routine per project and hours combination (the repos and project names here are examples):
 
 ```text
 Create my Povio worklog for today.
 
+Run every npx command from /tmp (cd /tmp && ...).
+
 1. For each repo below, call the add_repo tool with read access (do not clone):
-   one-lucky-dog/one-lucky-dog-monorepo, waybacklabs/faceflip
-2. Run: npx -y -p 'povio-worklog-mcp@^1.2.0' povio-worklog commits --repos <the repos, comma separated> --date today
+   acme-corp/mobile-app, acme-corp/web-dashboard
+2. Run: cd /tmp && npx -y -p 'povio-worklog-mcp@^1.2.0' povio-worklog commits --repos acme-corp/mobile-app,acme-corp/web-dashboard --date today
 3. If it reports no commits or an ERROR, stop and do not post anything.
 4. Otherwise write the description following the guidelines in the output, keeping the [TICKET] format.
-5. Run: npx -y -p 'povio-worklog-mcp@^1.2.0' povio-worklog post --project "<Povio project>" --hours 8 --date <the date printed by commits> --description "<description>"
+5. Run: cd /tmp && npx -y -p 'povio-worklog-mcp@^1.2.0' povio-worklog post --project "Acme App" --hours 8 --date <the date printed by commits> --description "<description>"
 ```
 
-Repos are read through the session's GitHub access, so `add_repo` is required for each repo before `commits` runs. If it fails, the CLI prints the GitHub error for that repo.
+Repos are read through the session's GitHub access, so `add_repo` is required for each repo before `commits` runs. If it fails, the CLI prints the GitHub error for that repo. `post` skips on its own when an entry already exists, so a repeated run never duplicates a worklog.
+
+Optionally end the prompt with a step asking the agent to send one short push notification with the result, so you see failures on your phone.
 
 ## Troubleshooting
 
