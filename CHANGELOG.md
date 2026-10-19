@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-10-19
+
+### Changed
+- **Shorter, plainer worklog descriptions.** The enhancement prompt now asks for compact, high-level text: one short sentence per ticket for up to 4 tickets, and themed groups for 5 or more (all ticket IDs in one tag, one sentence per group, e.g. `[ONE-1, ONE-2, ONE-3] Fixed Android issues with the keyboard and menus.`). It bans filler words (delivered, comprehensive, polished, ...), skips tests/refactors/merges, and asks for only the final description with no commentary. This applies to both the MCP tools and the CLI.
+
+### Added
+- `povio-worklog post --tickets ONE-1,ONE-2` refuses to post (exit 1) if the description is missing any listed ticket, so grouping never drops a ticket.
+
 ## [1.2.0] - 2026-10-15
 
 ### Added

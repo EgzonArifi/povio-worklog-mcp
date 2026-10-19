@@ -29,10 +29,11 @@ import { ParsedCommit } from './types/index.js';
 const USAGE = `Usage:
   povio-worklog commits --repos <owner/name,...> [--date <date>] [--user <github-login>] [--json]
   povio-worklog post --project <name> | --project-id <id> --hours <n> --date <YYYY-MM-dd>
-                     --description <text | -> [--dry-run] [--force]
+                     --description <text | -> [--tickets <ID,ID,...>] [--dry-run] [--force]
   povio-worklog logs [--date <date>] [--project <name> | --project-id <id>]
 
 post skips (exit 0) when a worklog already exists for that project and day; --force posts anyway.
+--tickets makes post refuse (exit 1) if the description does not contain every listed ticket ID.
 
 Dates: today, yesterday, last-workday, YYYY-MM-dd, MM/dd/YYYY, dd.MM.YYYY (default: yesterday)
 Environment: WORKLOG_TIMEZONE (e.g. Europe/Belgrade), WORKLOG_GITHUB_USER, POVIO_API_TOKEN, DEFAULT_PROJECT_ID`;
@@ -192,6 +193,16 @@ async function runPost(flags: Flags): Promise<number> {
   if (!description) throw new Error('--description is required (use "-" to read it from stdin)');
   if (description === '-') description = await readStdin();
   if (!description) throw new Error('Description is empty');
+
+  // Guard against dropping tickets when the description is condensed or grouped
+  const expectedTickets = (str(flags, 'tickets') ?? '')
+    .split(',')
+    .map(t => t.trim())
+    .filter(Boolean);
+  const missingTickets = expectedTickets.filter(t => !description!.includes(t));
+  if (missingTickets.length > 0) {
+    throw new Error(`Description is missing ticket(s): ${missingTickets.join(', ')}. Nothing was posted. Add them and try again.`);
+  }
 
   const projectId = projectIdRaw ? Number(projectIdRaw) : undefined;
 
