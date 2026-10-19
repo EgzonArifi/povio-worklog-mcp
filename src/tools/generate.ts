@@ -68,6 +68,9 @@ export async function generateWorklog(args: GenerateWorklogArgs): Promise<Worklo
   }
 }
 
+/** Ticket count at which descriptions switch from one sentence per ticket to themed groups. */
+export const GROUP_THRESHOLD = 5;
+
 export function generateAIEnhancementPrompt(commits: any[], ticketNumbers: string[], displayName: string): string {
   const commitDetails = commits.map(c => {
     let detail = `- ${c.hash}: ${c.message} (${c.type})`;
@@ -80,63 +83,49 @@ export function generateAIEnhancementPrompt(commits: any[], ticketNumbers: strin
     return detail;
   }).join('\n');
 
-  const hasMultipleTickets = ticketNumbers.length > 1;
+  const grouped = ticketNumbers.length >= GROUP_THRESHOLD;
+
+  const formatRules = ticketNumbers.length === 0
+    ? `✓ No ticket numbers: write one plain sentence (two at most) for the whole day, no tags.`
+    : grouped
+    ? `✓ ${ticketNumbers.length} TICKETS - GROUP THEM. Do not write one sentence per ticket.
+✓ Sort the tickets into 2-4 themes (e.g. UI copy and polish, Android fixes, offline and reliability, or one feature area).
+✓ Tag each group with ALL of its ticket numbers, then ONE sentence of 25 words or fewer naming the areas touched at a high level.
+✓ Format: [TICKET-1, TICKET-2, TICKET-3] Group sentence. [TICKET-4, TICKET-5] Group sentence.
+✓ Every ticket number above must appear in exactly one tag. Do not drop or invent tickets.`
+    : `✓ ${ticketNumbers.length} TICKET${ticketNumbers.length > 1 ? 'S' : ''}: one short sentence per ticket, 15 words or fewer, the [TICKET-123] tag directly before it.
+✓ Format: [TICKET-1] Sentence one. [TICKET-2] Sentence two.
+✓ Merge closely related commits for the same ticket into one sentence.`;
 
   return `
 📋 WORKLOG ENHANCEMENT REQUEST (${displayName})
 
-Based on these commits, generate an improved worklog description following Povio guidelines:
+Write the worklog description for these commits. It appears on client invoices, so it must be short, plain and professional.
 
 COMMITS:
 ${commitDetails}
 
 TICKET NUMBERS: ${ticketNumbers.join(', ') || 'None'}
 
-POVIO GUIDELINES:
-✓ Logs appear on client invoices - must be professional and appropriate
-✓ Describe what was accomplished for the client (not technical details)
-✓ Use dense, descriptive format combining multiple accomplishments
-✓ Include ticket numbers in [TICKET-123] format DIRECTLY BEFORE their description
-✓ Focus on business value and user-facing features
-✓ Avoid: branch names, PR numbers, technical jargon, internal processes
+FORMAT:
+${formatRules}
 
-FORMAT REQUIREMENTS:
-${hasMultipleTickets ? 
-`✓ MULTIPLE TICKETS: Place each ticket number directly before its accomplishment
-✓ Format: [TICKET-1] Description one. [TICKET-2] Description two. [TICKET-3] Description three
-✓ This allows clear attribution and better invoicing/tracking` :
-`✓ SINGLE TICKET: Place ticket number at the start
-✓ Format: [TICKET-123] Description of what was accomplished`
-}
+STYLE RULES:
+✓ Compact: aim for 300 characters or fewer on a normal day. Never pad.
+✓ High level: say what changed for the user or product, not how it was built.
+✓ Plain past-tense verbs: Added, Fixed, Updated, Renamed, Removed, Improved.
+✓ No filler: never use delivered, comprehensive, polished, robust, seamless, enhanced, strengthened, streamlined, leveraged, various or numerous.
+✓ Leave out tests, refactors, merge commits, tooling and maintenance, unless that was the only work.
+✓ No branch names, PR numbers, file names or technical jargon.
 
 EXAMPLES:
-Single ticket:
-  [ENG-155] Implemented screenshot upload feature in developer settings
+2 tickets:
+  [ENG-101] Added password reset by email. [ENG-102] Fixed the login timeout on slow connections.
+7 tickets, grouped:
+  [ENG-201, ENG-202, ENG-203] Updated wording and labels in profile, signup and settings. [ENG-204, ENG-205, ENG-206] Fixed Android issues with the keyboard, menus and location lookup. [ENG-207] Added offline handling to the chat.
 
-Multiple tickets:
-  [ENG-101] Set up initial project structure. [ENG-102] Implemented user authentication. [ENG-103] Created dashboard UI
-  [PROJ-45] Fixed login timeout issue. [PROJ-46] Added password reset functionality
-
-TASK:
-Generate a comprehensive worklog description that:
-1. Places each [TICKET] directly before its specific accomplishment
-2. Describes accomplishments in client-appropriate language
-3. Focuses on what was delivered, not how it was done
-4. Is concise but informative
-5. Uses periods to separate different tickets' work
-
-IMPORTANT FORMATTING:
-Present the enhanced description in TWO formats for best user experience:
-
-1. ENHANCED DESCRIPTION (readable):
-${hasMultipleTickets ? '[TICKET-1] Description one. [TICKET-2] Description two' : '[TICKET-123] Your enhanced description here'}
-
-2. COPYABLE VERSION:
-\`\`\`
-${hasMultipleTickets ? '[TICKET-1] Description one. [TICKET-2] Description two' : '[TICKET-123] Your enhanced description here'}
-\`\`\`
-
-Then provide brief context explaining why this follows Povio guidelines and maintains clear ticket attribution.
+OUTPUT:
+Give only the final description in one code block, with no explanation or commentary.
 `.trim();
 }
 
