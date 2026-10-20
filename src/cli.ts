@@ -29,11 +29,12 @@ import { ParsedCommit } from './types/index.js';
 const USAGE = `Usage:
   povio-worklog commits --repos <owner/name,...> [--date <date>] [--user <github-login>] [--json]
   povio-worklog post --project <name> | --project-id <id> --hours <n> --date <YYYY-MM-dd>
-                     --description <text | -> [--tickets <ID,ID,...>] [--dry-run] [--force]
+                     --description <text | -> [--tickets <ID,ID,...>] [--max-length <chars>] [--dry-run] [--force]
   povio-worklog logs [--date <date>] [--project <name> | --project-id <id>]
 
 post skips (exit 0) when a worklog already exists for that project and day; --force posts anyway.
 --tickets makes post refuse (exit 1) if the description does not contain every listed ticket ID.
+--max-length makes post refuse (exit 1) if the description is longer than that many characters.
 
 Dates: today, yesterday, last-workday, YYYY-MM-dd, MM/dd/YYYY, dd.MM.YYYY (default: yesterday)
 Environment: WORKLOG_TIMEZONE (e.g. Europe/Belgrade), WORKLOG_GITHUB_USER, POVIO_API_TOKEN, DEFAULT_PROJECT_ID`;
@@ -199,6 +200,14 @@ async function runPost(flags: Flags): Promise<number> {
     .split(',')
     .map(t => t.trim())
     .filter(Boolean);
+  const maxLengthRaw = str(flags, 'max-length');
+  if (maxLengthRaw !== undefined) {
+    const maxLength = Number(maxLengthRaw);
+    if (!Number.isInteger(maxLength) || maxLength <= 0) throw new Error('--max-length must be a positive whole number');
+    if (description.length > maxLength) {
+      throw new Error(`Description is ${description.length} characters, over the limit of ${maxLength}. Nothing was posted. Shorten it (fewer words per group, drop minor details) and try again.`);
+    }
+  }
   const missingTickets = expectedTickets.filter(t => !description!.includes(t));
   if (missingTickets.length > 0) {
     throw new Error(`Description is missing ticket(s): ${missingTickets.join(', ')}. Nothing was posted. Add them and try again.`);
