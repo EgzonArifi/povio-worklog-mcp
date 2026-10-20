@@ -492,6 +492,7 @@ povio-worklog post --project "FaceFlip" --hours 8 --date 2026-10-14 --descriptio
 - `--date`: `today`, `yesterday`, `last-workday` (yesterday, but Friday on Sunday/Monday), `YYYY-MM-dd`, `MM/dd/YYYY`, `dd.MM.YYYY`
 - `commits` prints the same Povio enhancement prompt as the MCP tool plus the commit data (`--json` for data only). When a day has no commits it says so and tells you not to post.
 - `post` first checks Povio for an existing worklog on the same project and day and skips it (exit 0) rather than posting a duplicate; `--force` posts anyway. If that check fails, nothing is posted.
+- `post --max-length 450` refuses to post a description longer than that many characters.
 - `post --tickets ONE-1,ONE-2` refuses to post if the description does not contain every listed ticket ID. Descriptions are kept short: one sentence per ticket up to 4 tickets, themed groups with all IDs in one tag for 5 or more.
 - `post --dry-run` prints what would be posted. Use `--description -` to read the text from stdin, `--project-id` instead of `--project` if you prefer.
 - `logs --date today --project "FaceFlip"` lists existing entries.
@@ -518,10 +519,10 @@ Run every npx command from /tmp (cd /tmp && ...).
 
 1. For each repo below, call the add_repo tool with read access (do not clone):
    acme-corp/mobile-app, acme-corp/web-dashboard
-2. Run: cd /tmp && npx -y -p 'povio-worklog-mcp@^1.3.0' povio-worklog commits --repos acme-corp/mobile-app,acme-corp/web-dashboard --date today
+2. Run: cd /tmp && npx -y -p 'povio-worklog-mcp@^1.4.0' povio-worklog commits --repos acme-corp/mobile-app,acme-corp/web-dashboard --date today
 3. If it reports no commits or an ERROR, stop and do not post anything.
 4. Otherwise write the description following the guidelines in the output, keeping the [TICKET] format.
-5. Run: cd /tmp && npx -y -p 'povio-worklog-mcp@^1.3.0' povio-worklog post --project "Acme App" --hours 8 --date <the date printed by commits> --tickets <the ticket numbers printed by commits> --description "<description>"
+5. Run: cd /tmp && npx -y -p 'povio-worklog-mcp@^1.4.0' povio-worklog post --project "Acme App" --hours 8 --date <the date printed by commits> --tickets <the ticket numbers printed by commits> --max-length 450 --description "<description>"
 ```
 
 Repos are read through the session's GitHub access, so `add_repo` is required for each repo before `commits` runs. If it fails, the CLI prints the GitHub error for that repo. `post` skips on its own when an entry already exists, so a repeated run never duplicates a worklog.
