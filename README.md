@@ -13,440 +13,140 @@
 
 # Povio Worklog MCP Server
 
-A Model Context Protocol (MCP) server that provides automated worklog generation from git commits with AI enhancement and seamless Povio dashboard integration.
+An MCP server that turns your git commits into short, invoice-ready Povio worklog descriptions. Posting is done by **Povio's official MCP server** (`https://app.povio.com/mcp`), which signs in with your dashboard account, so there is no cookie token to copy or renew.
 
-**Transform this:**
-```bash
-git log  # Copy commits manually
-# Open Povio dashboard
-# Fill in project, hours, description
-# Submit
+```
+wl FaceFlip 8   # commits → description → posted to Povio
 ```
 
-**Into this:**
-```
-wl FaceFlip 8  # Done! ✓
-```
+> **Upgrading from 1.x?** See [Migrating to 2.0](#migrating-to-20).
+
+## How it works
+
+| Step | Done by |
+|------|---------|
+| Read your commits (local git, or GitHub without cloning) | this package |
+| Description rules: compact, high level, every ticket ID, grouping for long days | this package |
+| Check tickets and length before posting (`validate_worklog`) | this package |
+| Find the project, check for an existing entry, post the time log | Povio's MCP (`professional_*` tools) |
 
 ## Features
 
-- 📋 **List Projects**: Easily view all your active Povio projects
-- 🏷️ **Use Project Names**: Simply use project names like "FaceFlip" or "Autobiography"
-- 🔍 **Generate Worklog**: Automatically analyze git commits and generate professional worklog descriptions
-- 📅 **Flexible Dates**: Support for "today", "yesterday", and specific dates (e.g., "2024-10-28", "Oct 28, 2024")
-- 🤖 **AI Enhancement (Default)**: AI automatically generates optimized, guideline-compliant descriptions from your commits
-- 📤 **Post to Povio**: Post worklogs directly to Povio dashboard
-- ⚡ **Combined Action**: Generate and post in one step
-- 🎫 **Smart Parsing**: Automatically extracts ticket numbers (e.g., ENG-155, WAY-204)
-- 📊 **Professional Formatting**: Creates client-appropriate worklog descriptions
+- 🔍 **Generate Worklog**: analyzes your commits (all branches, only yours) and returns rules for a short, professional description
+- 🎫 **Ticket IDs**: extracts IDs like ENG-155; one sentence per ticket up to 4, themed groups for 5 or more
+- ✅ **Validate**: checks every ticket ID is present and the text is not too long, without any Povio token
+- 📅 **Flexible Dates**: "today", "yesterday", `2024-10-28`, `10/28/2024`, `28.10.2024`
+- ☁️ **Cloud routines**: `povio-worklog` CLI reads commits from GitHub, no clone needed
 
 ## Installation
 
-### Quick Start (Recommended - npm)
+You need two MCP servers: this one, and Povio's.
 
-No need to clone! Just add the configuration to Cursor:
+### 1. This package
 
-**File:** `~/.cursor/mcp.json`
+**Cursor** (`~/.cursor/mcp.json`):
 
 ```json
 {
   "mcpServers": {
     "povio-worklog": {
       "command": "npx",
-      "args": ["-y", "povio-worklog-mcp"],
-      "env": {
-        "POVIO_API_TOKEN": "your-povio-token-value"
-      }
+      "args": ["-y", "povio-worklog-mcp@^2"]
     }
   }
 }
 ```
 
-**That's it!** The package will be automatically downloaded and run via npx.
-
-**Configuration Details:**
-- **POVIO_API_TOKEN:** Your Povio dashboard cookie token value (see [Getting Your Token](#getting-your-povio-api-token) below for detailed instructions)
-  - Just provide the token value - the `_poviolabs_dashboard=` prefix is automatically added
-- **Note:** The tool uses the current working directory of your Cursor workspace as the git repository
-- **Updates:** npx automatically uses the latest version on each run
-
-### Alternative: Local Development Installation
-
-If you want to contribute or modify the source code:
-
-#### 1. Clone the Repository
+**Claude Code:**
 
 ```bash
-git clone https://github.com/EgzonArifi/povio-worklog-mcp.git
-cd mcp-server
+claude mcp add povio-worklog -- npx -y povio-worklog-mcp@^2
 ```
 
-#### 2. Install Dependencies
+No environment variables are needed. The repository is the current working directory unless you pass `repository`.
 
-```bash
-npm install
-```
+### 2. Povio's MCP server
 
-#### 3. Build the Server
-
-```bash
-npm run build
-```
-
-#### 4. Configure Cursor
-
-**File:** `~/.cursor/mcp.json`
+**Cursor**: add it next to the entry above, then click **Connect** next to it in Settings → MCP:
 
 ```json
 {
   "mcpServers": {
-    "povio-worklog": {
-      "command": "node",
-      "args": ["/absolute/path/to/mcp-server/dist/index.js"],
-      "env": {
-        "POVIO_API_TOKEN": "your-povio-token-value"
-      }
+    "povio-dashboard": {
+      "url": "https://app.povio.com/mcp"
     }
   }
 }
 ```
 
-**When to rebuild:**
-- ✅ First time setup
-- ✅ After pulling updates from git
-- ✅ After making changes to `src/` files
+**Claude Code**: add it, then run `/mcp`, pick `povio-dashboard` and sign in in the browser:
 
-### Restart Cursor
+```bash
+claude mcp add --transport http povio-dashboard https://app.povio.com/mcp
+```
 
-After adding the configuration, **fully restart Cursor** (Cmd+Q and reopen, not just close the window) to load the MCP server.
+**Claude (web/desktop)**: Settings → Connectors → Add custom connector, URL `https://app.povio.com/mcp`.
 
-> **⚠️ Getting "command not found" error?** See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for quick fixes. Most common solution: `npm cache clean --force` and restart Cursor.
+Fully restart Cursor (Cmd+Q) after editing `mcp.json`.
 
-## Usage in Cursor
+> **⚠️ Getting "command not found" error?** See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).
 
-Once configured, you can use natural language to interact with the worklog tools:
-
-### Quick Commands
-
-For faster workflow, use these short patterns:
+## Usage
 
 ```
 wl                          → Generate worklog for today
 wl yesterday                → Generate worklog for yesterday
-wl 2024-10-28               → Generate worklog for specific date (Oct 28)
-wl list                     → List Povio projects
-wl post FaceFlip 8          → Generate and post to FaceFlip, 8 hours
-wl FaceFlip 4               → Generate and post to FaceFlip, 4 hours
+wl 2024-10-28               → Generate worklog for a specific date
+wl FaceFlip 8               → Generate and post to FaceFlip, 8 hours
 wl yesterday FaceFlip 8     → Generate yesterday's worklog and post
+"list my povio projects"    → Answered by Povio's MCP
 ```
 
-Or use full natural language:
+When you ask to post, the assistant:
 
-```
-"generate worklog for today"
-"generate worklog for yesterday"
-"generate worklog for 2024-10-28"
-"post worklog to FaceFlip with 4 hours"
-"list my povio projects"
-```
+1. calls `generate_worklog` and writes the description,
+2. calls `validate_worklog` with the ticket IDs and a 450-character limit,
+3. calls Povio's `professional_list_available_project_users` to find the project,
+4. calls `professional_list_time_logs` and stops if that day already has an entry for the project,
+5. calls `professional_save_time_log`.
 
-### Keyboard Shortcuts
-
-1. **Cursor Composer** (`Cmd+I` or `Cmd+K`): Type your command
-2. **Chat** (`Cmd+L`): Use for longer workflows
-3. **.cursorrules**: Add custom shortcuts (see `.cursorrules` file in project)
-
-### Pro Tips
-
-- Use `.cursorrules` file for project-specific shortcuts
-- Type "wl" for quick worklog commands (if using .cursorrules)
-- Save common project names as shortcuts in your rules
-- Chain commands: "wl list, then post to FaceFlip 8 hours"
-
-### Generate Worklog (AI-Enhanced by Default)
-
-```
-You: "generate worklog for today"
-AI: [Uses generate_worklog tool with AI enhancement]
-    Analyzes commits and generates optimized description following Povio guidelines
-    Returns: Enhanced, client-appropriate worklog description
-```
-
-### Generate without AI Enhancement (Not Recommended)
-
-```
-You: "generate worklog for today without AI"
-AI: [Uses generate_worklog tool with enhanceWithAI=false]
-    Returns: Basic auto-generated description
-```
-
-### List Povio Projects
-
-```
-You: "list my povio projects"
-AI: [Uses list_povio_projects tool]
-    Shows all your active projects with roles
-```
-
-### Post Worklog
-
-```
-You: "post worklog with 4 hours to FaceFlip"
-AI: [Uses post_worklog tool]
-    Automatically resolves project by name and posts
-
-You: "post worklog with 6 hours to Autobiography"
-AI: [Uses post_worklog tool]
-    Posts to Autobiography
-```
-
-### Generate and Post
-
-```
-You: "generate and post worklog for today, 4 hours"
-AI: [Uses generate_and_post_worklog tool]
-    Generates from commits AND posts to Povio (uses DEFAULT_PROJECT_ID)
-
-You: "generate and post worklog for yesterday, 6 hours, project 12345"
-AI: [Uses generate_and_post_worklog tool]
-    Generates and posts to specific project
-```
+These steps are included in the `generate_worklog` output, so the assistant does not need to know them in advance.
 
 ## Available Tools
 
-### 1. `list_povio_projects`
-
-List all your active projects in Povio.
-
-**Parameters:** None
-
-**Returns:**
-```
-Found 6 active project(s):
-
-• Autobiography (Ios Engineer)
-• FaceFlip (Ios Engineer)
-• Povio Estimations (Ios Engineer)
-• Team Leads (Lead Engineer)
-• iOS Internal (Ios Engineer)
-• Bunny CDN Mobile (Ios Engineer)
-```
-
-**Usage:**
-```
-You: "list my povio projects"
-AI: [Uses list_povio_projects tool]
-    Shows all your active projects with roles
-```
-
-### 2. `generate_worklog`
-
-Generate a worklog from git commits.
+### `generate_worklog`
 
 **Parameters:**
-- `timeframe` (required): Date format - supports:
-  - `"today"`, `"yesterday"`
-  - Specific dates: `"2024-10-28"` (YYYY-MM-dd), `"10/28/2024"` (MM/dd/YYYY), `"28.10.2024"` (dd.MM.YYYY)
-- `repository` (optional): Path to git repository (defaults to current directory)
-- `enhanceWithAI` (optional): Defaults to `true`. Set to `false` to disable AI enhancement (not recommended)
+- `timeframe` (required): `"today"`, `"yesterday"`, `"2024-10-28"`, `"10/28/2024"` or `"28.10.2024"`
+- `repository` (optional): path to the git repository (defaults to the current directory)
+- `project`, `hours` (optional): used in the posting steps when you want to post
+- `enhanceWithAI` (optional): defaults to `true`; `false` returns the basic auto-generated description
 
-**Returns (AI enhancement mode - default):**
-The tool returns:
-- Detailed commit information with context
-- Povio guidelines for the AI to follow
-- A prompt requesting the AI to generate an optimized description
-- Auto-generated description as a reference
+**Returns:** your commits, the ticket IDs, the description rules and the posting steps.
 
-The AI will then analyze the commits and create a superior, client-appropriate worklog description.
-
-**Returns (basic mode - when disabled):**
-```json
-{
-  "date": "2024-10-28",
-  "description": "[ENG-155] Implement Screenshot Upload Feature",
-  "commits": [
-    "8e644dc - ENG-155 Implement Screenshot Upload Feature"
-  ],
-  "ticketNumbers": ["ENG-155"]
-}
-```
-
-### 3. `post_worklog`
-
-Post a worklog entry to Povio dashboard.
+### `validate_worklog`
 
 **Parameters:**
-- `description` (required): Worklog description
-- `projectName` (required): Project name (e.g., "FaceFlip", "Autobiography")
-- `hours` (required): Number of hours worked
-- `date` (required): Date in YYYY-MM-dd format
+- `description` (required)
+- `tickets` (optional): ticket IDs that must appear
+- `maxLength` (optional): maximum characters (450 suggested)
 
-**Returns:**
-```
-✓ Worklog posted successfully!
-Date: 2024-10-28
-Hours: 4
-Project ID: 15886
-```
+**Returns:** `VALID (312 characters). Ready to post.` or `INVALID - do not post.` with the reasons.
 
-**Usage:**
-```
-You: "post worklog with 4 hours to FaceFlip"
-AI: [Uses post_worklog tool]
-    Automatically resolves "FaceFlip" and posts
+## Description rules
 
-You: "post 6 hours to Autobiography"
-AI: [Uses post_worklog tool]
-    Posts to Autobiography
+Descriptions appear on client invoices exactly as written. The rules ask for:
+
+- about 300 characters on a normal day, plain past-tense verbs, no filler words
+- what changed for the product, not how it was built; no branch names, PR numbers or file names
+- tests, refactors and merges left out unless that was the only work
+- one sentence per ticket for up to 4 tickets; for 5 or more, 2–4 themed groups with all IDs in one tag:
+
+```
+[ENG-201, ENG-202, ENG-203] Updated wording and labels in profile, signup and settings. [ENG-204, ENG-205] Fixed Android issues with the keyboard and menus.
 ```
 
-### 4. `generate_and_post_worklog`
-
-Combined tool that generates from commits and posts to Povio.
-
-**Parameters:**
-- `timeframe` (required): Date format - supports:
-  - `"today"`, `"yesterday"`
-  - Specific dates: `"2024-10-28"` (YYYY-MM-dd), `"10/28/2024"` (MM/dd/YYYY), `"28.10.2024"` (dd.MM.YYYY)
-- `projectName` (required): Project name (e.g., "FaceFlip", "Autobiography")
-- `hours` (required): Number of hours worked
-- `repository` (optional): Path to git repository
-- `enhanceWithAI` (optional): Defaults to `true`. Set to `false` to disable AI enhancement and auto-post (not recommended)
-
-**Returns:**
-Combined summary with generation and posting results.
-
-**Note:** By default (AI enhancement enabled), the tool will:
-1. Generate the worklog with AI enhancement prompt
-2. Wait for AI to create optimized description
-3. NOT post automatically (you'll then use `post_worklog` with the AI-generated description)
-
-## AI-Enhanced Worklog Generation (Default!)
-
-All worklog generation now uses **AI enhancement by default**. This feature:
-
-### How It Works
-
-1. **Analyze Commits**: The tool extracts your git commits with full context
-2. **Apply Guidelines**: Provides the AI with Povio's specific guidelines
-3. **Generate Description**: The AI creates an optimized, client-appropriate description
-4. **Review & Post**: You review the AI-generated description and post it
-
-### Benefits
-
-- 🎯 **Better Context**: AI understands the bigger picture from multiple commits
-- 📝 **Improved Language**: Generates more professional, client-facing descriptions
-- ✅ **Guideline Compliance**: Automatically follows Povio's invoicing guidelines
-- ⚡ **Time Saving**: No need to manually craft descriptions
-
-### Example
-
-**Your commits:**
-```
-8e644dc - ENG-155 Implement Screenshot Upload Feature
-a2b3c4d - ENG-155 Add error handling for uploads
-d5e6f7g - ENG-155 Update UI for better UX
-```
-
-**Standard description:**
-```
-[ENG-155] Implement Screenshot Upload Feature
-```
-
-**AI-enhanced description:**
-```
-[ENG-155] Implemented screenshot upload functionality in developer settings with comprehensive error handling and improved user interface for enhanced user experience
-```
-
-### Usage
-
-AI enhancement is **automatic** - just use the normal commands:
-```
-You: "generate worklog for today"
-```
-
-To disable AI enhancement (not recommended), you can explicitly set `enhanceWithAI: false` when calling the tool directly, or say "without AI".
-
-## Important: Client-Facing Descriptions
-
-**This tool generates descriptions that appear on client invoices.** The formatter:
-
-- ✅ Filters commits to **only YOUR commits** (based on git user.email)
-- ✅ Creates professional, client-appropriate descriptions
-- ✅ Removes technical jargon (branch names, PR numbers, etc.)
-- ✅ Extracts and includes ticket numbers
-- ✅ Combines multiple commits into dense, descriptive format
-
-**Povio Guidelines:**
-> Logs are shown on invoices for clients exactly as they are, so make sure they are appropriate and descriptive. Write down what you accomplished for the client in a dense format and add ticket numbers or descriptions if possible.
-
-The tool automatically formats your commits to follow these guidelines. With **AI enhancement mode**, you get even better descriptions that maximize clarity and professionalism.
-
-## Getting Your Povio API Token
-
-The `POVIO_API_TOKEN` should be set to **just the cookie token value**. The `_poviolabs_dashboard=` prefix is automatically added by the server.
-
-### Step-by-Step Instructions:
-
-1. **Log in** to [Povio Dashboard](https://app.povio.com)
-
-2. **Open DevTools** (Press `F12` or right-click → Inspect)
-
-3. **Go to Application/Storage tab**
-   - Chrome/Edge: Click "Application" tab → "Cookies" → `https://app.povio.com`
-   - Firefox: Click "Storage" tab → "Cookies" → `https://app.povio.com`
-   - Safari: Enable Developer menu, then Develop → Show Web Inspector → Storage
-
-4. **Find the cookie** named `_poviolabs_dashboard`
-
-5. **Copy just the cookie value** (the part after `_poviolabs_dashboard=`):
-   ```
-   s%3Aabcd1234...xyz
-   ```
-   
-   ⚠️ **Important**: 
-   - Copy **only the value** (the part after the `=` sign)
-   - Do NOT include `_poviolabs_dashboard=` - it's added automatically
-   - The value is usually very long (300-500 characters)
-   - Don't add quotes around it in the config
-
-6. **Add to your Cursor MCP configuration** (`~/.cursor/mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "povio-worklog": {
-      "command": "npx",
-      "args": ["-y", "povio-worklog-mcp"],
-      "env": {
-        "POVIO_API_TOKEN": "s%3Aabcd1234...your-actual-cookie-value"
-      }
-    }
-  }
-}
-```
-
-### Example (shortened for display):
-
-```json
-"POVIO_API_TOKEN": "s%3AY1lndE1GK256eTZzZmd0L2s5ODc2djdqaTdrL2VaZFlFS2..."
-```
-
-### Troubleshooting:
-
-- ❌ **Wrong**: `"your-povio-token-value"` (placeholder text)
-- ❌ **Wrong**: `"_poviolabs_dashboard=s%3Aabcd1234..."` (includes prefix - will still work but unnecessary)
-- ✅ **Correct**: `"s%3Aabcd1234..."` (just the token value)
-
-## Your Projects
-
-Use `list_povio_projects` to see all your active projects with their IDs.
-
-Common examples:
-- **FaceFlip** (ID: 15886)
-- **Autobiography** (ID: 14093)
-- **Team Leads** (ID: 13396)
-- **iOS Internal** (ID: 13247)
+Only commits by you are counted (matched on your git `user.name` / `user.email`).
 
 ## Development
 
@@ -477,40 +177,35 @@ Then send JSON-RPC messages via stdin.
 
 ## Run Unattended in Claude Routines (Cloud)
 
-The MCP server reads commits from the repo you are working in. For a scheduled run that does not need your Mac (a [Claude routine](https://code.claude.com/docs/en/routines)), use the `povio-worklog` CLI. It reads your commits from GitHub through `gh api` (no clone) and posts to Povio with the same code as the MCP tools. Local MCP usage is unchanged.
+For a scheduled run that does not need your Mac (a [Claude routine](https://code.claude.com/docs/en/routines)), use the `povio-worklog` CLI to read commits from GitHub through `gh api` (no clone), and Povio's MCP as a routine connector to post.
 
 ### CLI
 
 ```bash
 # Commits for yesterday across one or more repos (all branches updated that day)
-povio-worklog commits --repos owner/repo-a,owner/repo-b --date yesterday
+povio-worklog commits --repos owner/repo-a,owner/repo-b --date yesterday --project "FaceFlip" --hours 8
 
-# Post a finished description
-povio-worklog post --project "FaceFlip" --hours 8 --date 2026-10-14 --description "[ONE-79] ..."
+# Check a finished description before posting
+povio-worklog validate --tickets ONE-1,ONE-2 --max-length 450 --description "[ONE-1] ..."
 ```
 
 - `--date`: `today`, `yesterday`, `last-workday` (yesterday, but Friday on Sunday/Monday), `YYYY-MM-dd`, `MM/dd/YYYY`, `dd.MM.YYYY`
-- `commits` prints the same Povio enhancement prompt as the MCP tool plus the commit data (`--json` for data only). When a day has no commits it says so and tells you not to post.
-- `post` first checks Povio for an existing worklog on the same project and day and skips it (exit 0) rather than posting a duplicate; `--force` posts anyway. If that check fails, nothing is posted.
-- `post --max-length 450` refuses to post a description longer than that many characters.
-- `post --tickets ONE-1,ONE-2` refuses to post if the description does not contain every listed ticket ID. Descriptions are kept short: one sentence per ticket up to 4 tickets, themed groups with all IDs in one tag for 5 or more.
-- `post --dry-run` prints what would be posted. Use `--description -` to read the text from stdin, `--project-id` instead of `--project` if you prefer.
-- `logs --date today --project "FaceFlip"` lists existing entries.
-- Exit code is non-zero when posting fails or every repo could not be read.
+- `commits` prints the description rules, the posting steps (with `--project` and `--hours` filled in) and the commit data. `--json` prints data only. When a day has no commits it says so and tells you not to post. It exits 1 only when no repo could be read.
+- `validate` exits 1 when a listed ticket is missing or the text is longer than `--max-length`. `--description -` reads stdin.
 
 ### Environment
 
 | Variable | Purpose |
 |----------|---------|
-| `POVIO_API_TOKEN` | Povio token (same as the MCP config) |
 | `WORKLOG_GITHUB_USER` | Your GitHub login, used as the commit author filter (falls back to `gh api user`) |
 | `WORKLOG_TIMEZONE` | e.g. `Europe/Belgrade`. Cloud VMs run in UTC, so day boundaries need this |
 
 ### Routine setup
 
-1. In the routine's cloud environment, set the variables above and allow `app.povio.com` under **Custom** network access (keep "include default list" checked). No GitHub token is needed.
-2. Attach at least one repo you can read to the routine. It is not used for anything else, but without an attached repo the session has no `add_repo` tool. Attach a repo other than this package's own: if the working directory is this package, `npx` cannot find the `povio-worklog` command, so the prompt below runs every `npx` from `/tmp`.
-3. Use a prompt like this, one routine per project and hours combination (the repos and project names here are examples):
+1. Connect Povio's MCP in claude.ai (Settings → Connectors → Add custom connector, `https://app.povio.com/mcp`) and add it to the routine. It only needs `professional_list_available_project_users`, `professional_list_time_logs` and `professional_save_time_log`; leave the manage tools off.
+2. In the routine's cloud environment, set the variables above. No Povio token or extra network access is needed.
+3. Attach at least one repo you can read to the routine. Without an attached repo the session has no `add_repo` tool. Attach a repo other than this package's own: if the working directory is this package, `npx` cannot find the `povio-worklog` command, so the prompt below runs every `npx` from `/tmp`.
+4. Use a prompt like this, one routine per project and hours combination (the repos and project names here are examples):
 
 ```text
 Create my Povio worklog for today.
@@ -519,66 +214,56 @@ Run every npx command from /tmp (cd /tmp && ...).
 
 1. For each repo below, call the add_repo tool with read access (do not clone):
    acme-corp/mobile-app, acme-corp/web-dashboard
-2. Run: cd /tmp && npx -y -p 'povio-worklog-mcp@^1.4.0' povio-worklog commits --repos acme-corp/mobile-app,acme-corp/web-dashboard --date today
+2. Run: cd /tmp && npx -y -p 'povio-worklog-mcp@^2' povio-worklog commits --repos acme-corp/mobile-app,acme-corp/web-dashboard --date today --project "Acme App" --hours 8
 3. If it reports no commits or an ERROR, stop and do not post anything.
-4. Otherwise write the description following the guidelines in the output, keeping the [TICKET] format.
-5. Run: cd /tmp && npx -y -p 'povio-worklog-mcp@^1.4.0' povio-worklog post --project "Acme App" --hours 8 --date <the date printed by commits> --tickets <the ticket numbers printed by commits> --max-length 450 --description "<description>"
+4. Otherwise write the description following the rules in the output, then follow its POSTING steps:
+   validate with povio-worklog validate, then post with the Povio connector.
 ```
 
-Repos are read through the session's GitHub access, so `add_repo` is required for each repo before `commits` runs. If it fails, the CLI prints the GitHub error for that repo. `post` skips on its own when an entry already exists, so a repeated run never duplicates a worklog.
+Repos are read through the session's GitHub access, so `add_repo` is required for each repo before `commits` runs. The posting steps check Povio for an existing entry first, so a repeated run never duplicates a worklog.
 
-Optionally end the prompt with a step asking the agent to send one short push notification with the result, so you see failures on your phone.
+## Migrating to 2.0
+
+2.0 removes the cookie-based Povio integration. The `_poviolabs_dashboard` token expired every week or two; Povio's own MCP server signs in with OAuth instead.
+
+| 1.x | 2.0 |
+|-----|-----|
+| `post_worklog` | Povio's `professional_save_time_log` |
+| `list_povio_projects` | Povio's `professional_list_available_project_users` |
+| `generate_and_post_worklog` | `generate_worklog` with `project` and `hours`, then the posting steps it returns |
+| CLI `post --tickets --max-length` | CLI `validate`, then Povio's MCP |
+| CLI `logs` | Povio's `professional_list_time_logs` |
+| `POVIO_API_TOKEN`, `DEFAULT_PROJECT_ID` | not used; remove them |
+
+To migrate: add Povio's MCP server ([Installation](#2-povios-mcp-server)) and remove `POVIO_API_TOKEN` from your `povio-worklog` config. `wl FaceFlip 8` keeps working. To stay on 1.x for now, pin `povio-worklog-mcp@^1`.
 
 ## Troubleshooting
 
 ### Server Not Starting
 
-1. Check that the server was built:
-   ```bash
-   ls -la dist/index.js
-   ```
-
-2. Test the server manually:
-   ```bash
-   node dist/index.js
-   ```
-   (It should run without errors and wait for input)
-
+1. Check that the server was built: `ls -la dist/index.js`
+2. Test it manually: `node dist/index.js` (it should wait for input)
 3. Check Cursor logs for MCP errors
 
-### Authentication Errors
+### Posting does not work
 
-If posting to Povio fails:
-
-1. Verify your token is set in the Cursor MCP configuration
-2. Check token validity (it may have expired)
-3. Get a fresh token from the Povio dashboard
+Posting goes through Povio's MCP server. Check that `povio-dashboard` is connected and signed in (Cursor: Settings → MCP; Claude Code: `/mcp`). The assistant only shows the description when Povio's tools are missing.
 
 ### No Commits Found
 
-If worklog generation returns no commits:
-
-1. Verify you're in a git repository:
-   ```bash
-   git status
-   ```
-
-2. Check if you have commits today:
-   ```bash
-   git log --since="today" --oneline
-   ```
-
-3. The server uses `--all` flag to check all branches
+1. Verify you're in a git repository: `git status`
+2. Check you have commits that day: `git log --since="today" --oneline --all`
+3. Only commits whose author matches your git `user.name` / `user.email` are counted
 
 ## Architecture
 
-This MCP server is built with TypeScript and follows the Model Context Protocol specification. It provides structured tools that AI assistants like Claude can use to help with worklog management.
-
-**Key Components:**
-- `src/services/git.ts` - Git commit analysis
-- `src/services/povio.ts` - Povio API integration
-- `src/services/formatter.ts` - Worklog formatting
-- `src/tools/` - MCP tool definitions
+- `src/services/git.ts` - local git commit reading
+- `src/services/github.ts` - GitHub commit reading for the CLI (`gh api`)
+- `src/services/commitParser.ts` - shared author filtering and deduplication
+- `src/services/formatter.ts` - ticket extraction and basic formatting
+- `src/tools/generate.ts` - description rules
+- `src/tools/validate.ts` - validation and posting steps
+- `src/index.ts` - MCP server; `src/cli.ts` - CLI
 
 ## License
 

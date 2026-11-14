@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-11-14
+
+### Removed (breaking)
+- The cookie-based Povio integration. The `_poviolabs_dashboard` token expired every week or two; Povio's official MCP server (`https://app.povio.com/mcp`) signs in with OAuth instead. Removed:
+  - MCP tools `post_worklog`, `generate_and_post_worklog` and `list_povio_projects`. Calling them returns an error that points to Povio's MCP.
+  - CLI commands `post` and `logs`.
+  - `POVIO_API_TOKEN` and `DEFAULT_PROJECT_ID`.
+
+### Added
+- `validate_worklog` MCP tool and `povio-worklog validate` CLI command: check that every ticket ID is present and the description is not longer than a limit, with no Povio token.
+- `generate_worklog` takes optional `project` and `hours` and returns posting steps: validate, find the project with `professional_list_available_project_users`, skip if `professional_list_time_logs` already has an entry for that day, then `professional_save_time_log`.
+- `povio-worklog commits` takes optional `--project` and `--hours` and prints the same posting steps.
+
+### Migrating
+Add Povio's MCP server next to this one and remove `POVIO_API_TOKEN`. `wl FaceFlip 8` keeps working. See "Migrating to 2.0" in the README. To stay on 1.x, pin `povio-worklog-mcp@^1`.
+
 ## [1.4.0] - 2026-10-20
 
 ### Added
