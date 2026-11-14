@@ -7,9 +7,9 @@
  * checkout or MCP client is available, e.g. a Claude cloud routine:
  *
  *   povio-worklog commits --repos owner/a,owner/b --date yesterday
- *   povio-worklog post --project "FaceFlip" --hours 8 --date 2026-10-14 --description "..."
+ *   povio-worklog validate --tickets ONE-1,ONE-2 --max-length 450 --description "..."
  *
- * The local MCP server (dist/index.js) is unaffected.
+ * Posting to Povio is done with Povio's official MCP server, not by this CLI.
  */
 
 // Apply the timezone before any Date is created so "today"/"yesterday" and day
@@ -22,22 +22,22 @@ import { DateParser } from './services/dateParser.js';
 import { GitHubService } from './services/github.js';
 import { WorklogFormatter } from './services/formatter.js';
 import { generateAIEnhancementPrompt } from './tools/generate.js';
-import { postWorklog } from './tools/post.js';
-import { PovioService } from './services/povio.js';
+import { formatValidation, povioPostingInstructions, validateWorklog, POVIO_MCP_URL } from './tools/validate.js';
 import { ParsedCommit } from './types/index.js';
 
 const USAGE = `Usage:
-  povio-worklog commits --repos <owner/name,...> [--date <date>] [--user <github-login>] [--json]
-  povio-worklog post --project <name> | --project-id <id> --hours <n> --date <YYYY-MM-dd>
-                     --description <text | -> [--tickets <ID,ID,...>] [--max-length <chars>] [--dry-run] [--force]
-  povio-worklog logs [--date <date>] [--project <name> | --project-id <id>]
+  povio-worklog commits --repos <owner/name,...> [--date <date>] [--user <github-login>]
+                        [--project <name>] [--hours <n>] [--json]
+  povio-worklog validate --description <text | -> [--tickets <ID,ID,...>] [--max-length <chars>]
 
-post skips (exit 0) when a worklog already exists for that project and day; --force posts anyway.
---tickets makes post refuse (exit 1) if the description does not contain every listed ticket ID.
---max-length makes post refuse (exit 1) if the description is longer than that many characters.
+commits prints the description rules, the commit data and, unless --json, the steps to post
+the worklog with Povio's official MCP server (${POVIO_MCP_URL}).
+validate exits 1 if the description is missing a listed ticket or is longer than --max-length.
 
 Dates: today, yesterday, last-workday, YYYY-MM-dd, MM/dd/YYYY, dd.MM.YYYY (default: yesterday)
-Environment: WORKLOG_TIMEZONE (e.g. Europe/Belgrade), WORKLOG_GITHUB_USER, POVIO_API_TOKEN, DEFAULT_PROJECT_ID`;
+Environment: WORKLOG_TIMEZONE (e.g. Europe/Belgrade), WORKLOG_GITHUB_USER`;
+
+const REMOVED = `was removed in 2.0. Post and read time logs with Povio's official MCP server (${POVIO_MCP_URL}); use "povio-worklog validate" to check a description first.`;
 
 type Flags = Record<string, string | boolean>;
 
@@ -172,6 +172,14 @@ async function runCommits(flags: Flags): Promise<number> {
     if (errors.length) console.log(`\nErrors:\n${errors.join('\n')}`);
   } else {
     console.log(generateAIEnhancementPrompt(commits, worklog.ticketNumbers, parsedDate.displayName));
+    const hoursRaw = str(flags, 'hours');
+    console.log('\n---\n' + povioPostingInstructions({
+      date: dateString,
+      hours: hoursRaw !== undefined ? Number(hoursRaw) : undefined,
+      project: str(flags, 'project'),
+      tickets: worklog.ticketNumbers,
+      via: 'cli',
+    }));
     console.log('\n---\nAUTO-GENERATED DESCRIPTION (for reference):');
     console.log(worklog.description);
     console.log('\n---\nCOMMIT DATA:');
@@ -182,88 +190,21 @@ async function runCommits(flags: Flags): Promise<number> {
   return errors.length === repos.length ? 1 : 0;
 }
 
-async function runPost(flags: Flags): Promise<number> {
-  const hours = Number(str(flags, 'hours'));
-  const date = str(flags, 'date');
+async function runValidate(flags: Flags): Promise<number> {
   let description = str(flags, 'description');
-  const projectName = str(flags, 'project');
-  const projectIdRaw = str(flags, 'project-id');
-
-  if (!Number.isFinite(hours) || hours <= 0) throw new Error('--hours must be a positive number');
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('--date must be YYYY-MM-dd');
   if (!description) throw new Error('--description is required (use "-" to read it from stdin)');
   if (description === '-') description = await readStdin();
-  if (!description) throw new Error('Description is empty');
 
-  // Guard against dropping tickets when the description is condensed or grouped
-  const expectedTickets = (str(flags, 'tickets') ?? '')
+  const tickets = (str(flags, 'tickets') ?? '')
     .split(',')
     .map(t => t.trim())
     .filter(Boolean);
   const maxLengthRaw = str(flags, 'max-length');
-  if (maxLengthRaw !== undefined) {
-    const maxLength = Number(maxLengthRaw);
-    if (!Number.isInteger(maxLength) || maxLength <= 0) throw new Error('--max-length must be a positive whole number');
-    if (description.length > maxLength) {
-      throw new Error(`Description is ${description.length} characters, over the limit of ${maxLength}. Nothing was posted. Shorten it (fewer words per group, drop minor details) and try again.`);
-    }
-  }
-  const missingTickets = expectedTickets.filter(t => !description!.includes(t));
-  if (missingTickets.length > 0) {
-    throw new Error(`Description is missing ticket(s): ${missingTickets.join(', ')}. Nothing was posted. Add them and try again.`);
-  }
+  const maxLength = maxLengthRaw !== undefined ? Number(maxLengthRaw) : undefined;
 
-  const projectId = projectIdRaw ? Number(projectIdRaw) : undefined;
-
-  if (flags['dry-run']) {
-    console.log('DRY RUN - nothing posted');
-    console.log(JSON.stringify({ date, hours, project: projectName ?? projectId ?? 'DEFAULT_PROJECT_ID', description }, null, 2));
-    return 0;
-  }
-
-  // Unless --force is given, never add a second entry for the same project and day.
-  // If the check itself fails we stop rather than risk a duplicate.
-  if (!flags.force) {
-    const povio = new PovioService();
-    const resolvedId = await resolveProjectId(povio, projectName, projectId);
-    const existing = await povio.fetchTimeLogs(date, resolvedId);
-    if (existing.length > 0) {
-      console.log(`SKIPPED: a worklog already exists for ${date} on project ${existing[0].projectName || resolvedId}. Nothing was posted.`);
-      for (const entry of existing) {
-        console.log(`- ${entry.hours} (entry ${entry.id}): ${entry.description}`);
-      }
-      return 0;
-    }
-    const result = await postWorklog({ description, projectId: resolvedId, hours, date });
-    console.log(result.message);
-    return result.success ? 0 : 1;
-  }
-
-  const result = await postWorklog({ description, projectName, projectId, hours, date });
-  console.log(result.message);
-  return result.success ? 0 : 1;
-}
-
-async function resolveProjectId(povio: PovioService, projectName?: string, projectId?: number): Promise<number> {
-  if (projectName) return povio.resolveProjectId(projectName);
-  const id = projectId ?? parseInt(process.env.DEFAULT_PROJECT_ID || '0');
-  if (!id) throw new Error('No project given: use --project, --project-id or set DEFAULT_PROJECT_ID');
-  return id;
-}
-
-async function runLogs(flags: Flags): Promise<number> {
-  const parsedDate = resolveDate(str(flags, 'date') ?? 'today');
-  const date = formatLocalDate(parsedDate.date);
-  const povio = new PovioService();
-  const projectName = str(flags, 'project');
-  const projectIdRaw = str(flags, 'project-id');
-  const projectId = projectName || projectIdRaw
-    ? await resolveProjectId(povio, projectName, projectIdRaw ? Number(projectIdRaw) : undefined)
-    : undefined;
-
-  const entries = await povio.fetchTimeLogs(date, projectId);
-  console.log(JSON.stringify({ date, count: entries.length, entries }, null, 2));
-  return 0;
+  const result = validateWorklog({ description, tickets, maxLength });
+  console.log(formatValidation(result));
+  return result.valid ? 0 : 1;
 }
 
 async function main(): Promise<number> {
@@ -275,10 +216,11 @@ async function main(): Promise<number> {
   switch (command) {
     case 'commits':
       return runCommits(flags);
+    case 'validate':
+      return runValidate(flags);
     case 'post':
-      return runPost(flags);
     case 'logs':
-      return runLogs(flags);
+      throw new Error(`"${command}" ${REMOVED}`);
     default:
       throw new Error(`Unknown command: ${command}\n\n${USAGE}`);
   }

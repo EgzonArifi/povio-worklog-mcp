@@ -45,10 +45,7 @@ Some systems have PATH issues in GUI apps. Update your `~/.cursor/mcp.json` to u
   "mcpServers": {
     "povio-worklog": {
       "command": "/usr/local/bin/npx",
-      "args": ["-y", "povio-worklog-mcp"],
-      "env": {
-        "POVIO_API_TOKEN": "your-token-here"
-      }
+      "args": ["-y", "povio-worklog-mcp"]
     }
   }
 }
@@ -94,10 +91,7 @@ Then update your `~/.cursor/mcp.json`:
   "mcpServers": {
     "povio-worklog": {
       "command": "node",
-      "args": ["/absolute/path/to/mcp-server/dist/index.js"],
-      "env": {
-        "POVIO_API_TOKEN": "your-token-here"
-      }
+      "args": ["/absolute/path/to/mcp-server/dist/index.js"]
     }
   }
 }
@@ -107,20 +101,11 @@ Then update your `~/.cursor/mcp.json`:
 
 ### Authentication Errors
 
-If posting to Povio fails with authentication errors:
+Since 2.0 this package does not talk to Povio. Posting goes through Povio's official MCP server (`https://app.povio.com/mcp`). If posting fails:
 
-1. Check your token format - provide just the cookie value:
-   ```
-   s%3A...
-   ```
-   (The `_poviolabs_dashboard=` prefix is automatically added)
-
-2. Get a fresh token from [Povio Dashboard](https://app.povio.com):
-   - Open DevTools (F12)
-   - Go to Application/Storage → Cookies
-   - Copy **only the value** of `_poviolabs_dashboard` cookie (the part after `=`)
-
-3. Make sure there are no extra quotes or spaces in the token
+1. Check that `povio-dashboard` is listed and connected (Cursor: Settings → MCP; Claude Code: `/mcp`)
+2. Reconnect it and sign in again if its tools are missing
+3. Remove any leftover `POVIO_API_TOKEN` from the `povio-worklog` config; it is no longer used
 
 ### No Commits Found
 
@@ -210,10 +195,7 @@ If you're getting an EOF (End of File) error during initialization in Antigravit
      "mcpServers": {
        "povio-worklog": {
          "command": "node",
-         "args": ["/absolute/path/to/mcp-server/dist/index.js"],
-         "env": {
-           "POVIO_API_TOKEN": "your-token-here"
-         }
+         "args": ["/absolute/path/to/mcp-server/dist/index.js"]
        }
      }
    }
@@ -283,7 +265,7 @@ If you're getting "No commits found" for today, yesterday, or specific dates, es
    - Your OS and Node.js version
    - Complete error message from Cursor logs
    - Output of `npx -y povio-worklog-mcp` in terminal
-   - Your mcp.json configuration (without the token)
+   - Your mcp.json configuration
 
 ## Getting Help
 
